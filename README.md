@@ -17,7 +17,9 @@ Everything is in Macedonian (Cyrillic).
 
 ## Filters
 
-Filters sit on two lines above the chart:
+All the controls sit on **one row** above the chart (the row wraps — with the
+actions moving to a second, right-aligned line — only when the container is
+too narrow for them):
 
 | Control | Options | Notes |
 |---|---|---|

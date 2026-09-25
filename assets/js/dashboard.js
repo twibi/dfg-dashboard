@@ -202,7 +202,8 @@
   /* ------------------------------------------------------------ filters */
   var card = mk("section", "dash-card");
 
-  /* one line: Единица · Контекст (the basis is fixed — see header) */
+  /* one row with every control: Единица · Контекст · Години · Линија …
+     actions (the basis is fixed — see the header) */
   var row1 = mk("div", "dash-row");
   var gUnit = segment("Единица", UNITS,
     function () { return state.unit; },
@@ -212,10 +213,8 @@
     function (v) { state.context = v; });
   row1.appendChild(gUnit);
   row1.appendChild(gContext);
-  card.appendChild(row1);
 
-  /* years + actions */
-  var row2 = mk("div", "dash-row");
+  /* years */
   var gYears = mk("div", "dash-group");
   gYears.appendChild(mk("div", "dash-label", "Години"));
   var yearsBox = mk("div", "dash-years");
@@ -244,7 +243,7 @@
   yearsBox.appendChild(mk("span", "dash-sep", "–"));
   yearsBox.appendChild(toSel);
   gYears.appendChild(yearsBox);
-  row2.appendChild(gYears);
+  row1.appendChild(gYears);
 
   /* show / hide the total line */
   var totalChk = mk("input", "dash-chk");
@@ -257,13 +256,13 @@
   var gTotal = mk("div", "dash-group");
   gTotal.appendChild(mk("div", "dash-label", "Линија"));
   gTotal.appendChild(totalLab);
-  row2.appendChild(gTotal);
+  row1.appendChild(gTotal);
   totalChk.addEventListener("change", function () {
     state.showTotal = totalChk.checked;
     refresh();
   });
 
-  row2.appendChild(mk("div", "dash-spacer"));
+  row1.appendChild(mk("div", "dash-spacer"));
 
   var gActions = mk("div", "dash-group");
   gActions.appendChild(mk("div", "dash-label", "\u00a0"));
@@ -273,11 +272,11 @@
   actions.appendChild(resetBtn);
   actions.appendChild(pngBtn);
   gActions.appendChild(actions);
-  row2.appendChild(gActions);
-  card.appendChild(row2);
+  row1.appendChild(gActions);
+  card.appendChild(row1);
 
   /* institutions */
-  var row3 = mk("div", "dash-row");
+  var row2 = mk("div", "dash-row");
   var gInst = mk("div", "dash-group grow");
   gInst.appendChild(mk("div", "dash-label", "Институции"));
   var pillLine = mk("div", "dash-pill-line");
@@ -292,8 +291,8 @@
   pillLine.appendChild(pills);
   pillLine.appendChild(pillActions);
   gInst.appendChild(pillLine);
-  row3.appendChild(gInst);
-  card.appendChild(row3);
+  row2.appendChild(gInst);
+  card.appendChild(row2);
 
   var caption = mk("div", "dash-caption");
   card.appendChild(caption);

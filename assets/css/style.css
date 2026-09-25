@@ -312,7 +312,15 @@ body.dfg-standalone .dfg-root .dash-page {
 
 .dfg-root .dash-spacer { flex: 1 1 auto; min-width: 0; }
 
-.dfg-root .dash-actions { display: flex; gap: 8px; align-items: center; white-space: nowrap; }
+/* the actions hug the right edge when the row has spare room, and stay
+   right-aligned on their own line when everything wraps */
+.dfg-root .dash-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  white-space: nowrap;
+  margin-left: auto;
+}
 
 .dfg-root .dash-btn {
   font: inherit;
