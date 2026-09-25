@@ -32,8 +32,7 @@ The **basis is fixed to „Без политички партии и спорт�
 basis selector any more, so every total on the page (the Вкупно line, the
 headline sentence and the `%` denominator) is that figure, which is what
 makes the dashboard suitable for the DFG. A footnote under the chart spells
-it out: *„Во овие средства не влегуваат средствата од спорт; кај
-политичките партии тоа се подразбира.“*
+it out: *„Во овие средства не влегуваат средствата од спорт.“*
 
 Missing years always render as a **gap** in the line (never as zero), and
 the caption above the chart restates the current unit and year range.

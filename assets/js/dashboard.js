@@ -305,11 +305,9 @@
   wrap.appendChild(emptyMsg);
   card.appendChild(wrap);
 
-  /* footnote: the totals shown here exclude sport, political parties are
-     taken to be excluded as well */
+  /* footnote: the totals shown here exclude sport */
   card.appendChild(mk("p", "dash-foot",
-    "Во овие средства не влегуваат средствата од спорт; кај политичките " +
-    "партии тоа се подразбира."));
+    "Во овие средства не влегуваат средствата од спорт."));
 
   sec.appendChild(card);
 
