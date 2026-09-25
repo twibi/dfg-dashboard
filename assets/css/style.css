@@ -1,0 +1,609 @@
+/* DFG dashboard – shared styles (no build step, plain CSS)
+   Palette: main #2f3283 · accent #ec7627 · background #e9e9e9
+
+   Everything is scoped under `.dfg-root`, every custom property carries the
+   `--dfg-` prefix and every internal wrapper uses a `dash-` class, so the
+   dashboard can be pasted into a WordPress page (Custom HTML block) without
+   inheriting the theme's styles or affecting them. The only rules that are
+   not scoped are `:root` (which merely defines namespaced variables —
+   harmless) and `body.dfg-standalone`, which only matches the standalone
+   site. */
+:root {
+  --dfg-main: #2f3283;          /* titles, level switch, total line */
+  --dfg-main-soft: #f1f1f8;     /* tinted callout background */
+  --dfg-accent: #ec7627;        /* action buttons, active selectors */
+  --dfg-accent-dark: #d9671d;
+  --dfg-ink: #1c2430;
+  --dfg-ink-soft: #4b5563;
+  --dfg-ink-faint: #6b7280;
+  --dfg-bg: #e9e9e9;
+  --dfg-card: #ffffff;
+  --dfg-line: #dcdfe6;
+  --dfg-radius: 10px;
+}
+
+/* Standalone site only — WordPress page bodies never carry this class. */
+body.dfg-standalone {
+  margin: 0;
+  min-height: 100vh;
+  background: var(--dfg-bg);
+}
+
+/* ---------- Isolation root ---------- */
+.dfg-root {
+  background: transparent;   /* embedded: the theme's one background shows */
+  color: var(--dfg-ink);
+  font-family: "Segoe UI", Arial, Helvetica, sans-serif;
+  line-height: 1.45;
+  text-align: left;
+}
+
+body.dfg-standalone .dfg-root {
+  background: var(--dfg-bg);
+  min-height: 100vh;
+}
+
+.dfg-root *,
+.dfg-root *::before,
+.dfg-root *::after { box-sizing: border-box; }
+
+/* ---------- Top bar (standalone only) ---------- */
+.dfg-root .dash-topbar {
+  background: var(--dfg-card);
+  border-bottom: 1px solid var(--dfg-line);
+  position: sticky;
+  top: 0;
+  z-index: 20;
+}
+
+.dfg-root .dash-topbar-inner {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 0 20px;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  flex-wrap: wrap;
+}
+
+.dfg-root .dash-brand {
+  font-weight: 700;
+  font-size: 15px;
+  letter-spacing: .3px;
+  color: var(--dfg-main);
+  text-decoration: none;
+  padding: 14px 0;
+  white-space: nowrap;
+}
+
+.dfg-root .dash-brand span { color: var(--dfg-ink-soft); font-weight: 600; }
+
+/* ---------- Page layout ---------- */
+.dfg-root .dash-page {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 0;              /* embedded: flush with the WordPress block */
+}
+
+body.dfg-standalone .dfg-root .dash-page {
+  padding: 26px 20px 60px;
+}
+
+.dfg-root .dash-section { margin-bottom: 30px; scroll-margin-top: 72px; }
+
+.dfg-root .dash-head { margin-bottom: 16px; }
+
+/* h1 on the standalone site, h2 when embedded (WordPress owns the h1).
+   Font props set explicitly so theme rules on bare h2/h3 tags can't bleed
+   in through inheritance-defeating element selectors. */
+.dfg-root h1,
+.dfg-root h2 {
+  font-size: 26px;
+  font-family: inherit;
+  font-weight: 700;
+  font-style: normal;
+  margin: 4px 0 6px;
+  line-height: 1.25;
+  color: var(--dfg-main);
+}
+
+.dfg-root .dash-sub {
+  font-size: 14.5px;
+  color: var(--dfg-ink-soft);
+  margin: 0 0 12px;
+}
+
+.dfg-root .dash-insight {
+  background: var(--dfg-main-soft);
+  border-left: 4px solid var(--dfg-main);
+  padding: 10px 14px;
+  border-radius: 0 var(--dfg-radius) var(--dfg-radius) 0;
+  font-size: 14.5px;
+  color: var(--dfg-ink);
+}
+
+/* ---------- Level switch (above the card) ---------- */
+.dfg-root .dash-levelbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 20px;
+  align-items: flex-end;
+  margin-bottom: 16px;
+}
+
+/* ---------- Filter card rows ---------- */
+.dfg-root .dash-row {
+  display: flex;
+  gap: 14px 16px;
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+
+.dfg-root .dash-row + .dash-row {
+  padding-top: 14px;
+  margin-top: 14px;
+  border-top: 1px solid var(--dfg-line);
+}
+
+.dfg-root .dash-group { display: flex; flex-direction: column; gap: 6px; }
+
+.dfg-root .dash-group.grow { flex: 1 1 auto; min-width: 0; }
+
+.dfg-root .dash-label {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 4px 8px;
+  font-size: 11.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .6px;
+  color: var(--dfg-ink-faint);
+}
+
+/* show / hide the total line */
+.dfg-root .dash-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 13.5px;
+  color: var(--dfg-ink);
+  cursor: pointer;
+  user-select: none;
+  padding: 5px 0;
+}
+
+.dfg-root .dash-chk {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  flex: none;
+  accent-color: var(--dfg-main);
+  cursor: pointer;
+}
+
+/* placeholder note shown where institution pills do not exist yet */
+.dfg-root .dash-note {
+  font-size: 12.5px;
+  font-weight: 500;
+  text-transform: none;
+  letter-spacing: normal;
+  color: var(--dfg-ink-faint);
+  font-style: italic;
+}
+
+.dfg-root .dash-seg { display: inline-flex; }
+
+.dfg-root .dash-seg-btn {
+  font: inherit;
+  font-size: 12.5px;
+  padding: 6px 9px;
+  border: 1px solid var(--dfg-line);
+  background: #fff;
+  color: var(--dfg-ink-soft);
+  border-radius: 0;
+  margin-left: -1px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.dfg-root .dash-seg .dash-seg-btn:first-child { border-radius: 6px 0 0 6px; margin-left: 0; }
+.dfg-root .dash-seg .dash-seg-btn:last-child { border-radius: 0 6px 6px 0; }
+.dfg-root .dash-seg .dash-seg-btn:only-child { border-radius: 6px; }
+
+.dfg-root .dash-seg .dash-seg-btn.on {
+  background: var(--dfg-accent);
+  border-color: var(--dfg-accent);
+  color: #fff;
+  font-weight: 600;
+  z-index: 1;
+}
+
+.dfg-root .dash-seg-btn:hover:not(.on):not(:disabled) { border-color: var(--dfg-accent); }
+
+.dfg-root .dash-seg-btn:disabled {
+  opacity: .45;
+  cursor: not-allowed;
+}
+
+/* ---------- Institution pills ---------- */
+.dfg-root .dash-pill-line {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.dfg-root .dash-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.dfg-root .dash-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  border: 1px solid var(--dfg-line);
+  background: #fff;
+  border-radius: 999px;
+  padding: 4px 8px;
+  font-size: 12px;
+  cursor: pointer;
+  user-select: none;
+  color: var(--dfg-ink-soft);
+  font-family: inherit;
+  line-height: 1.3;
+}
+
+.dfg-root .dash-pill:hover { border-color: var(--dfg-accent); }
+
+.dfg-root .dash-pill.on {
+  border-color: transparent;
+  background: var(--dfg-main-soft);
+  color: var(--dfg-ink);
+  font-weight: 600;
+}
+
+.dfg-root .dash-pill .dash-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #c9cfda;
+  flex: none;
+}
+
+.dfg-root .dash-pill.on .dash-dot {
+  background: var(--dfg-pill, #fff);
+  box-shadow: 0 0 0 1.5px #fff;
+}
+
+.dfg-root .dash-pill-actions { display: flex; gap: 6px; flex: none; }
+
+.dfg-root .dash-mini {
+  border: 1px solid var(--dfg-line);
+  background: #fff;
+  color: var(--dfg-ink-soft);
+  font-size: 12px;
+  border-radius: 6px;
+  padding: 4px 10px;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.dfg-root .dash-mini:hover { background: #f6f7f9; border-color: var(--dfg-accent); }
+
+/* ---------- Years / selects ---------- */
+.dfg-root .dash-years { display: flex; align-items: center; gap: 8px; }
+
+.dfg-root .dash-sep { color: var(--dfg-ink-faint); }
+
+.dfg-root select.dash-select {
+  font: inherit;
+  font-size: 13.5px;
+  padding: 6px 10px;
+  border: 1px solid var(--dfg-line);
+  border-radius: 6px;
+  background: #fff;
+  color: var(--dfg-ink);
+}
+
+.dfg-root .dash-spacer { flex: 1 1 auto; min-width: 0; }
+
+.dfg-root .dash-actions { display: flex; gap: 8px; align-items: center; white-space: nowrap; }
+
+.dfg-root .dash-btn {
+  font: inherit;
+  font-size: 13.5px;
+  font-weight: 600;
+  border-radius: 7px;
+  padding: 8px 16px;
+  cursor: pointer;
+  border: 1px solid var(--dfg-line);
+  background: #fff;
+  color: var(--dfg-ink-soft);
+  font-family: inherit;
+}
+
+.dfg-root .dash-btn:hover { background: #f6f7f9; }
+
+.dfg-root .dash-btn.primary {
+  background: var(--dfg-accent);
+  border-color: var(--dfg-accent);
+  color: #fff;
+}
+
+.dfg-root .dash-btn.primary:hover {
+  background: var(--dfg-accent-dark);
+  border-color: var(--dfg-accent-dark);
+}
+
+/* ---------- Chart card ---------- */
+.dfg-root .dash-card {
+  background: var(--dfg-card);
+  border: 1px solid var(--dfg-line);
+  border-radius: var(--dfg-radius);
+  padding: 18px 20px 16px;
+  box-shadow: 0 1px 3px rgba(16, 24, 40, .05);
+}
+
+.dfg-root .dash-caption {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+  font-size: 13px;
+  color: var(--dfg-ink-soft);
+  margin: 16px 0 4px;
+}
+
+.dfg-root .dash-caption b { color: var(--dfg-ink); font-weight: 600; }
+
+.dfg-root .dash-caption .warn { color: var(--dfg-accent); font-weight: 600; }
+
+.dfg-root .dash-chart { position: relative; height: 470px !important; }
+
+.dfg-root .dash-empty {
+  display: none;
+  position: absolute;
+  inset: 0;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 0 30px;
+  color: var(--dfg-ink-faint);
+  font-size: 15px;
+  line-height: 1.6;
+  background: var(--dfg-card);   /* fully covers the chart underneath */
+}
+
+/* =========================================================================
+   Hardening against a hostile host page.
+
+   WordPress themes and page builders routinely ship bare-element rules
+   carrying !important (`button { font-size: 20px !important }`,
+   `h2 { color: red !important; text-transform: uppercase }`). Specificity
+   alone cannot win against those, so the handful of properties that carry
+   the dashboard's identity are restated here with !important.
+
+   Everything below is still scoped to `.dfg-root`, so this layer changes
+   nothing outside the dashboard — the guarantee is one-directional: the
+   theme cannot restyle us, and we cannot restyle the theme.
+   ========================================================================= */
+
+.dfg-root,
+.dfg-root p,
+.dfg-root span,
+.dfg-root b,
+.dfg-root li,
+.dfg-root button,
+.dfg-root select {
+  font-family: "Segoe UI", Arial, Helvetica, sans-serif !important;
+}
+
+.dfg-root {
+  font-size: 16px !important;
+  line-height: 1.45 !important;
+  text-align: left !important;
+}
+
+/* layout boxes a page builder could plausibly target (`section`, `.card`) */
+.dfg-root .dash-page {
+  max-width: 1180px !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+}
+
+.dfg-root .dash-card {
+  padding: 18px 20px 16px !important;
+  border: 1px solid var(--dfg-line) !important;
+  border-radius: var(--dfg-radius) !important;
+  background: var(--dfg-card) !important;
+}
+
+.dfg-root .dash-insight {
+  padding: 10px 14px !important;
+  border: 0 !important;
+  border-left: 4px solid var(--dfg-main) !important;
+  border-radius: 0 var(--dfg-radius) var(--dfg-radius) 0 !important;
+}
+
+/* headings — the theme owns the page's h1, we own ours */
+.dfg-root h1,
+.dfg-root h2 {
+  font-size: 26px !important;
+  font-weight: 700 !important;
+  font-style: normal !important;
+  line-height: 1.25 !important;
+  margin: 4px 0 6px !important;
+  padding: 0 !important;
+  border: 0 !important;
+  color: var(--dfg-main) !important;
+  text-transform: none !important;
+  letter-spacing: normal !important;
+  text-align: left !important;
+}
+
+/* labels and captions */
+.dfg-root .dash-label {
+  font-size: 11.5px !important;
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+  letter-spacing: .6px !important;
+  color: var(--dfg-ink-faint) !important;
+}
+
+.dfg-root .dash-check {
+  font-size: 13.5px !important;
+  line-height: normal !important;
+  color: var(--dfg-ink) !important;
+  text-transform: none !important;
+  letter-spacing: normal !important;
+}
+
+.dfg-root .dash-chk {
+  width: 16px !important;
+  height: 16px !important;
+  margin: 0 !important;
+  accent-color: var(--dfg-main) !important;
+}
+
+.dfg-root .dash-note {
+  font-size: 12.5px !important;
+  font-style: italic !important;
+  text-transform: none !important;
+  letter-spacing: normal !important;
+  color: var(--dfg-ink-faint) !important;
+}
+
+.dfg-root .dash-sub {
+  font-size: 14.5px !important;
+  line-height: 1.45 !important;
+  text-align: left !important;
+  color: var(--dfg-ink-soft) !important;
+}
+
+.dfg-root .dash-insight {
+  font-size: 14.5px !important;
+  line-height: 1.45 !important;
+  text-align: left !important;
+  color: var(--dfg-ink) !important;
+  background: var(--dfg-main-soft) !important;
+}
+
+.dfg-root .dash-caption {
+  font-size: 13px !important;
+  line-height: 1.45 !important;
+  text-align: left !important;
+  color: var(--dfg-ink-soft) !important;
+}
+
+.dfg-root .dash-empty {
+  font-size: 15px !important;
+  line-height: 1.6 !important;
+  color: var(--dfg-ink-faint) !important;
+  background: var(--dfg-card) !important;
+}
+
+/* interactive controls — `font: inherit` and hand-set sizes are the first
+   thing a theme's button rule destroys */
+.dfg-root .dash-seg-btn,
+.dfg-root .dash-select,
+.dfg-root .dash-btn,
+.dfg-root .dash-mini,
+.dfg-root .dash-pill {
+  text-transform: none !important;
+  letter-spacing: normal !important;
+  text-align: left !important;
+}
+
+.dfg-root .dash-seg-btn {
+  font-size: 12.5px !important;
+  line-height: normal !important;
+  margin-left: -1px !important;
+  padding: 6px 9px !important;
+  color: var(--dfg-ink-soft) !important;
+  background: #fff !important;
+}
+
+.dfg-root .dash-seg .dash-seg-btn:first-child {
+  margin-left: 0 !important;
+  border-radius: 6px 0 0 6px !important;
+}
+.dfg-root .dash-seg .dash-seg-btn:last-child { border-radius: 0 6px 6px 0 !important; }
+.dfg-root .dash-seg .dash-seg-btn:only-child { border-radius: 6px !important; }
+
+.dfg-root .dash-seg .dash-seg-btn.on {
+  font-weight: 600 !important;
+  color: #fff !important;
+  background: var(--dfg-accent) !important;
+  border-color: var(--dfg-accent) !important;
+}
+
+.dfg-root select.dash-select {
+  font-size: 13.5px !important;
+  line-height: normal !important;
+  padding: 6px 10px !important;
+  border-radius: 6px !important;
+  color: var(--dfg-ink) !important;
+  background: #fff !important;
+  border: 1px solid var(--dfg-line) !important;
+}
+
+.dfg-root .dash-btn {
+  font-size: 13.5px !important;
+  font-weight: 600 !important;
+  line-height: normal !important;
+  padding: 8px 16px !important;
+  border-radius: 7px !important;
+  color: var(--dfg-ink-soft) !important;
+  background: #fff !important;
+  border: 1px solid var(--dfg-line) !important;
+}
+
+.dfg-root .dash-btn.primary {
+  color: #fff !important;
+  background: var(--dfg-accent) !important;
+  border-color: var(--dfg-accent) !important;
+}
+
+.dfg-root .dash-mini {
+  font-size: 12px !important;
+  line-height: normal !important;
+  padding: 4px 10px !important;
+  border-radius: 6px !important;
+  color: var(--dfg-ink-soft) !important;
+  background: #fff !important;
+  border: 1px solid var(--dfg-line) !important;
+}
+
+.dfg-root .dash-pill {
+  font-size: 12px !important;
+  line-height: 1.3 !important;
+  padding: 4px 8px !important;
+  border-radius: 999px !important;
+  color: var(--dfg-ink-soft) !important;
+  background: #fff !important;
+  border: 1px solid var(--dfg-line) !important;
+}
+
+.dfg-root .dash-pill.on {
+  font-weight: 600 !important;
+  color: var(--dfg-ink) !important;
+  background: var(--dfg-main-soft) !important;
+  border-color: transparent !important;
+}
+
+.dfg-root .dash-pill .dash-dot {
+  width: 8px !important;
+  height: 8px !important;
+  border-radius: 50% !important;
+}
+
+@media (max-width: 860px) {
+  .dfg-root h1,
+  .dfg-root h2 { font-size: 21px !important; }
+  .dfg-root .dash-chart { height: 380px !important; }
+  .dfg-root .dash-spacer { display: none; }
+}
