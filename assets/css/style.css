@@ -1,5 +1,5 @@
 /* DFG dashboard – shared styles (no build step, plain CSS)
-   Palette: main #2f3283 · accent #ec7627 · background #e9e9e9
+   Palette: main #005783 · accent #4a927b · background #e9e9e9
 
    Everything is scoped under `.dfg-root`, every custom property carries the
    `--dfg-` prefix and every internal wrapper uses a `dash-` class, so the
@@ -9,10 +9,10 @@
    harmless) and `body.dfg-standalone`, which only matches the standalone
    site. */
 :root {
-  --dfg-main: #2f3283;          /* titles, level switch, total line */
-  --dfg-main-soft: #f1f1f8;     /* tinted callout background */
-  --dfg-accent: #ec7627;        /* action buttons, active selectors */
-  --dfg-accent-dark: #d9671d;
+  --dfg-main: #005783;          /* titles, total line */
+  --dfg-main-soft: #eef4f8;     /* tinted callout background */
+  --dfg-accent: #4a927b;        /* action buttons, active selectors */
+  --dfg-accent-dark: #3d7a66;
   --dfg-ink: #1c2430;
   --dfg-ink-soft: #4b5563;
   --dfg-ink-faint: #6b7280;
@@ -362,6 +362,16 @@ body.dfg-standalone .dfg-root .dash-page {
 
 .dfg-root .dash-caption .warn { color: var(--dfg-accent); font-weight: 600; }
 
+/* footnote sitting directly under the chart */
+.dfg-root .dash-foot {
+  margin: 14px 0 0;
+  padding-top: 10px;
+  border-top: 1px dashed var(--dfg-line);
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--dfg-ink-faint);
+}
+
 .dfg-root .dash-chart { position: relative; height: 470px !important; }
 
 .dfg-root .dash-empty {
@@ -497,6 +507,16 @@ body.dfg-standalone .dfg-root .dash-page {
   line-height: 1.45 !important;
   text-align: left !important;
   color: var(--dfg-ink-soft) !important;
+}
+
+.dfg-root .dash-foot {
+  display: block !important;
+  margin: 14px 0 0 !important;
+  padding-top: 10px !important;
+  font-size: 12.5px !important;
+  line-height: 1.5 !important;
+  text-align: left !important;
+  color: var(--dfg-ink-faint) !important;
 }
 
 .dfg-root .dash-empty {
