@@ -6,11 +6,15 @@ An interactive, **fully static** dashboard for the state funding of civil
 society organisations in North Macedonia, built from
 `DFG analiza brojki.xlsx` (14 worksheets), covering **2018–2025**.
 
-**One page, one chart, two levels** — switched with the
+**One page, two charts, two levels** — the level is switched with the
 *Национално ниво / Локално ниво* toggle above the filter card:
 
 - **Национално ниво** (default) — 17 institutions as lines plus a **Вкупно**
-  total line, shown or hidden with the *Линија → Вкупно* checkbox.
+  total line, shown or hidden with the *Линија → Вкупно* checkbox, and the
+  same numbers again as **vertical stacked bars** directly under it (one bar
+  per year, one segment per institution, no total line — the stack adds up
+  what is switched on). Both charts and the data table share every filter,
+  so they can never disagree.
 - **Локално ниво** — placeholder for the municipality × year table. The data
   does not exist yet, so it shows a "coming soon" empty state (pills replaced
   by a note, context overlay disabled) instead of a broken chart.

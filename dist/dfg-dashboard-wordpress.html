@@ -473,6 +473,18 @@ body.dfg-standalone .dfg-root .dash-page {
 
 .dfg-root .dash-chart { position: relative; height: 470px !important; }
 
+/* the stacked bar chart sits directly under the line chart */
+.dfg-root .dash-chart2-title {
+  margin-top: 24px;
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--dfg-ink);
+}
+.dfg-root .dash-chart2 { margin-top: 8px; }
+
+/* what the PNG button exports */
+.dfg-root select.dash-png { max-width: 178px; }
+
 .dfg-root .dash-empty {
   display: none;
   position: absolute;
@@ -787,6 +799,15 @@ body.dfg-standalone .dfg-root .dash-page {
   height: 8px !important;
   border-radius: 50% !important;
 }
+
+.dfg-root .dash-chart2-title {
+  font-size: 13.5px !important;
+  font-weight: 700 !important;
+  color: var(--dfg-ink) !important;
+  margin-top: 24px !important;
+}
+.dfg-root .dash-chart2 { margin-top: 8px !important; }
+.dfg-root select.dash-png { max-width: 178px !important; }
 
 @media (max-width: 860px) {
   .dfg-root h1,
@@ -2627,8 +2648,24 @@ window.DFG = {
   gActions.appendChild(mk("div", "dash-label", "\u00a0"));
   var actions = mk("div", "dash-actions");
   var resetBtn = btn("dash-btn", "Ресетирај");
+
+  /* what the PNG button captures: the line chart, the stacked bars or both */
+  var pngSel = mk("select", "dash-select dash-png");
+  [{ v: "line", t: "Само линискиот" },
+   { v: "bars", t: "Само купчестиот" },
+   { v: "both", t: "Дваата графикони" }].forEach(function (o) {
+    var opt = document.createElement("option");
+    opt.value = o.v;
+    opt.textContent = o.t;
+    pngSel.appendChild(opt);
+  });
+  pngSel.value = "both";
+  pngSel.title = "Што да се вклучи во PNG-сликата";
+  pngSel.setAttribute("aria-label", "Што да се извезе во PNG");
+
   var pngBtn = btn("dash-btn primary", "Сними PNG");
   actions.appendChild(resetBtn);
+  actions.appendChild(pngSel);
   actions.appendChild(pngBtn);
   gActions.appendChild(actions);
   row1.appendChild(gActions);
@@ -2662,6 +2699,19 @@ window.DFG = {
   var emptyMsg = mk("div", "dash-empty");
   wrap.appendChild(emptyMsg);
   card.appendChild(wrap);
+
+  /* second chart: vertical stacked bars — one bar per year, one segment per
+     institution. It reads the same collectSeries() data as the line chart
+     and the table, so every filter drives all three views at once. */
+  var chart2Title = mk("div", "dash-chart2-title",
+    "Распределба по институции — секој бар е година, секој сегмент е институција");
+  card.appendChild(chart2Title);
+  var wrap2 = mk("div", "dash-chart dash-chart2");
+  var canvas2 = document.createElement("canvas");
+  wrap2.appendChild(canvas2);
+  var emptyMsg2 = mk("div", "dash-empty");
+  wrap2.appendChild(emptyMsg2);
+  card.appendChild(wrap2);
 
   /* the same numbers as a table, right under the chart */
   var tableHost = mk("div", "dash-table");
@@ -2798,6 +2848,22 @@ window.DFG = {
     return ds;
   }
 
+  /* one segment of the stacked chart */
+  function bar(label, color, vals) {
+    return {
+      type: "bar",
+      label: label,
+      data: vals,
+      backgroundColor: color,
+      borderColor: color,
+      borderWidth: 0,
+      borderRadius: 2,
+      categoryPercentage: 0.72,
+      barPercentage: 0.94,
+      maxBarThickness: 64
+    };
+  }
+
   /* ------------------------------------------------------------- chart */
   if (typeof Chart === "undefined") {
     wrap.innerHTML =
@@ -2811,6 +2877,7 @@ window.DFG = {
   Chart.defaults.color = INK;
 
   var chart = null;
+  var chart2 = null;
 
   /* ------------------------------------------------- shared data view */
   /* One pass over the current filter selection. The chart AND the table
@@ -2904,8 +2971,7 @@ window.DFG = {
       : "Изберете барем една институција за да се прикажат податоците.";
   }
 
-  function buildConfig() {
-    var data = collectSeries();
+  function buildConfig(data) {
     var idxs = data.idxs;
     var labels = data.labels;
 
@@ -2998,8 +3064,115 @@ window.DFG = {
     };
   }
 
-  function updateChart() {
-    var cfg = buildConfig();
+  /* Second chart: vertical stacked bars — one bar per year, one segment per
+     institution, drawn from the very same collectSeries() data, so every
+     filter (unit, years, institutions, context) drives it along with the
+     line chart and the table. The workbook's Вкупно line is deliberately
+     left out: the stack already adds up what is switched on. */
+  function buildConfig2(data) {
+    var datasets = [];
+    var leftVals = [];
+
+    data.series.forEach(function (s) {
+      leftVals = leftVals.concat(s.values);
+      var ds = bar(s.name, s.color, s.values);
+      ds.dfgInst = s.id;
+      ds.dfgStack = true;
+      datasets.push(ds);
+    });
+
+    var ctx = collectContext(data.idxs);
+    var rightMeta = null, ctxFmt = null;
+    if (ctx) {
+      rightMeta = axisMeta(ctx.values, ctx.unit);
+      var ctxLabel = ctx.name;
+      if (state.context === "income" && rightMeta.div !== 1) ctxLabel += " (млн)";
+      datasets.push(line(ctxLabel, ctx.color, ctx.values,
+        { borderDash: [6, 4], borderWidth: 2, pointRadius: 0,
+          type: "line", yAxisID: "y1" }));
+      ctxFmt = ctx.fmt;
+    }
+
+    var leftMeta = axisMeta(leftVals, state.unit);
+    var fmtL = formatter(state.unit);
+
+    var scales = {
+      y: {
+        beginAtZero: true,
+        stacked: true,
+        position: "left",
+        title: { display: true, text: leftMeta.suffix },
+        ticks: { callback: axisTick(leftMeta), maxTicksLimit: 7 },
+        grid: { color: "#eceff4" }
+      },
+      x: {
+        stacked: true,
+        title: { display: true, text: "Година" },
+        grid: { display: false }
+      }
+    };
+    if (rightMeta) {
+      scales.y1 = {
+        beginAtZero: true,
+        stacked: false,
+        position: "right",
+        title: { display: true, text: rightMeta.suffix },
+        ticks: { callback: axisTick(rightMeta), maxTicksLimit: 7 },
+        grid: { drawOnChartArea: false }
+      };
+    }
+
+    datasets.forEach(function (ds) {
+      ds.dfgFmt = ds.yAxisID === "y1" ? ctxFmt : fmtL;
+    });
+
+    return {
+      type: "bar",
+      data: { labels: data.labels, datasets: datasets },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        devicePixelRatio: 2,                 /* sharp PNG export */
+        animation: { duration: 250 },
+        interaction: { mode: "index", intersect: false },
+        plugins: {
+          legend: {
+            position: "bottom",
+            labels: { usePointStyle: true, pointStyle: "circle", padding: 14 }
+          },
+          tooltip: {
+            callbacks: {
+              label: function (c) {
+                var v = c.parsed.y;
+                if (v === null || v === undefined) {
+                  return c.dataset.label + ": нема податоци";
+                }
+                return c.dataset.label + ": " +
+                       (c.dataset.dfgFmt ? c.dataset.dfgFmt(v) : v);
+              },
+              /* the height of the stack, for the segments only — never the
+                 workbook's Вкупно, which has a different basis */
+              footer: function (items) {
+                var sum = 0, any = false;
+                items.forEach(function (it) {
+                  var v = it.parsed.y;
+                  if (it.dataset.dfgStack && v !== null && v !== undefined) {
+                    sum += v;
+                    any = true;
+                  }
+                });
+                return any ? "Збир: " + fmtL(sum) : "";
+              }
+            }
+          }
+        },
+        scales: scales
+      }
+    };
+  }
+
+  function updateCharts(data) {
+    var cfg = buildConfig(data);
     if (!chart) {
       chart = new Chart(canvas.getContext("2d"), cfg);
     } else {
@@ -3011,6 +3184,21 @@ window.DFG = {
     var msg = emptyMessage(cfg.data.datasets.length);
     emptyMsg.textContent = msg;
     emptyMsg.style.display = msg ? "flex" : "none";
+
+    var cfg2 = buildConfig2(data);
+    if (!chart2) {
+      chart2 = new Chart(canvas2.getContext("2d"), cfg2);
+    } else {
+      chart2.data = cfg2.data;
+      chart2.options = cfg2.options;
+      chart2.update();
+    }
+
+    /* with no institution selected the stack has nothing to draw (Вкупно
+       lives only on the line chart) — same words as everywhere else */
+    var msg2 = emptyMessage(data.series.length);
+    emptyMsg2.textContent = msg2;
+    emptyMsg2.style.display = msg2 ? "flex" : "none";
   }
 
   /* the single place that names the table's unit (plus the FX rate) */
@@ -3029,10 +3217,9 @@ window.DFG = {
   /* ------------------------------------------------------------- table */
   /* The chart's numbers as a table, built from the same collectSeries()
      result, so filtering updates both at once and identically. */
-  function renderTable() {
+  function renderTable(data) {
     tableHost.innerHTML = "";
 
-    var data = collectSeries();
     var ctx = collectContext(data.idxs);
     var rows = data.series.length + (data.total ? 1 : 0) + (ctx ? 1 : 0);
 
@@ -3150,8 +3337,10 @@ window.DFG = {
     renderPills();
     renderHeading();
     renderCaption();
-    updateChart();
-    renderTable();
+    var data = collectSeries();   /* one read, three views: both charts and
+                                     the table — they can never disagree */
+    updateCharts(data);
+    renderTable(data);
   }
 
   resetBtn.addEventListener("click", function () {
@@ -3170,32 +3359,48 @@ window.DFG = {
   /* Chart.js defers its paint to requestAnimationFrame, which the browser
      suspends while the tab is hidden — so an export taken at that moment
      (or mid-animation) would be blank. Force a synchronous paint first. */
-  function paintNow() {
-    if (!chart) return null;
-    var anim = chart.options.animation;
-    chart.options.animation = false;
-    chart.update("none");
-    chart.draw();
+  function freeze(c) {
+    var anim = c.options.animation;
+    c.options.animation = false;
+    c.update("none");
+    c.draw();
     return anim;
   }
 
-  function restorePaint(anim) {
-    if (!chart) return;
-    chart.options.animation = anim;
-    chart.update("none");
-    chart.draw();
+  function thaw(c, anim) {
+    c.options.animation = anim;
+    c.update("none");
+    c.draw();
   }
 
   function exportPNG() {
-    var anim = paintNow();
+    /* the select next to the button decides what goes into the picture */
+    var parts = [];
+    if (pngSel.value !== "bars" && chart) {
+      parts.push({ chart: chart, src: canvas, title: null });
+    }
+    if (pngSel.value !== "line" && chart2) {
+      parts.push({ chart: chart2, src: canvas2,
+                   title: chart2Title.textContent });
+    }
+    if (!parts.length) return;
 
-    var src = canvas;
+    var frozen = parts.map(function (p) {
+      return { c: p.chart, anim: freeze(p.chart) };
+    });
+
     var pad = 36;
+    var gap = 26;
+    var titleH = 30;
     var headH = ins.textContent ? 96 : 66;
+    var bodyH = 0;
+    parts.forEach(function (p, i) {
+      bodyH += (p.title ? titleH : 0) + p.src.height + (i ? gap : 0);
+    });
 
     var out = document.createElement("canvas");
-    out.width = src.width;
-    out.height = src.height + headH;
+    out.width = Math.max.apply(null, parts.map(function (p) { return p.src.width; }));
+    out.height = headH + bodyH;
     var ctx = out.getContext("2d");
 
     ctx.fillStyle = "#ffffff";
@@ -3211,7 +3416,18 @@ window.DFG = {
       ctx.fillText(fitText(ctx, ins.textContent, out.width - pad * 2), pad, pad + 34);
     }
 
-    ctx.drawImage(src, 0, headH);
+    var y = headH;
+    parts.forEach(function (p, i) {
+      if (i) y += gap;
+      if (p.title) {
+        ctx.fillStyle = INK;
+        ctx.font = "700 18px 'Segoe UI', Arial, sans-serif";
+        ctx.fillText(fitText(ctx, p.title, out.width - pad * 2), pad, y);
+        y += titleH;
+      }
+      ctx.drawImage(p.src, 0, y);
+      y += p.src.height;
+    });
 
     var a = document.createElement("a");
     a.href = out.toDataURL("image/png");
@@ -3219,7 +3435,7 @@ window.DFG = {
                  YEARS[state.to] + ".png";
     a.click();
 
-    restorePaint(anim);
+    frozen.forEach(function (f) { thaw(f.c, f.anim); });
   }
 
   function fitText(ctx, text, maxW) {
