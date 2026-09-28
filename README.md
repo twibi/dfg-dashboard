@@ -91,6 +91,27 @@ the caption above the chart restates the current unit and year range.
   …“ with the share rounded to a whole percent (7,67 % → 8 %); the basis is
   no longer spelled out there — the footnote under the chart carries it.
 
+## Names
+
+The dashboard shows its own cleaned-up institution names (`NAME_FIX` in
+`extract_data.py`, keyed by the master sheet's `бр.` column, so matching,
+sums and percentages keep using the workbook's own text):
+
+- `ИНОВА (или бившо Фонд за иновации и технолошки развој` → **ИНОВА (поранешно ФИТР)**
+- `бившо/бивша` → **поранешно/поранешна** (МТСП, АМС)
+- typo fixes: `Министертсво` → **Министерство**, `остарување` → **остварување**
+
+**Where each form appears:**
+
+| Place | Form | Example |
+|---|---|---|
+| data table (first column) | full name | Министерство за локална самоуправа |
+| chart legend + tooltip | ministries abbreviated, the rest short | Мин. за локална самоуправа |
+| institution pills | short label | Локална самоуправа |
+
+Only names starting with *Министерство/Министертсво* get the `Мин. ` prefix —
+non-ministries keep their short label so the legend stays readable.
+
 ## Design
 
 - Main colour `#005783` (headings, total line) · accent

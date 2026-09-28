@@ -488,6 +488,18 @@
   /* ------------------------------------------------- shared data view */
   /* One pass over the current filter selection. The chart AND the table
      render exactly this, so the two can never show different numbers. */
+
+  /* Chart label: ministries carry their full name with an abbreviated
+     prefix — "Министерство за локална самоуправа" becomes
+     "Мин. за локална самоуправа" (the client's wording). Everything that
+     is not a ministry keeps its short label, to keep the legend readable. */
+  function chartLabel(inst) {
+    var name = inst.name || "";
+    /* NB: \w is ASCII-only in JS, so match the Cyrillic word directly */
+    var m = /^Минист\S*\s+/.exec(name);
+    return m ? "Мин. " + name.slice(m[0].length) : inst.short;
+  }
+
   function collectSeries() {
     var lv = level();
     var idxs = [];
@@ -505,7 +517,7 @@
         return xform(src[i], denom ? denom[i] : null);
       });
       if (vals.every(function (v) { return v === null; })) return;
-      series.push({ id: inst.id, name: inst.short, full: inst.name,
+      series.push({ id: inst.id, name: chartLabel(inst), full: inst.name,
                     color: PALETTE[idx % PALETTE.length], values: vals });
     });
 

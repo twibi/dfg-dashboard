@@ -71,6 +71,17 @@ SHORT = {
     17: "Дирекција за спасување",
 }
 
+# Corrected display names for the master sheet rows: the workbook still has
+# a few typos and the outdated "бившо/бивша" phrasing, which the client asked
+# to replace with "поранешно/поранешна". Keyed by the "бр." column, so the
+# rest of the workbook (matching, sums, percentages) is untouched.
+NAME_FIX = {
+    6: "Министерство за социјална политика, демографија и млади (поранешно МТСП)",
+    7: "Министерство за спорт (поранешна АМС)",
+    12: "ИНОВА (поранешно ФИТР)",
+    14: "Агенцијата за остварување на правата на заедниците",
+}
+
 # Detail sheets identify some institutions by abbreviation (2018 sheet) and
 # many by older/renamed variants, so matching goes through an exact-abbreviation
 # table first and then through ordered keywords (first hit wins).
@@ -161,7 +172,7 @@ def read_master(ws, unmapped):
         institutions.append({
             "id": "i%d" % no,
             "no": no,
-            "name": name,
+            "name": NAME_FIX.get(no, name),
             "short": SHORT.get(no, name),
         })
         r += 1
