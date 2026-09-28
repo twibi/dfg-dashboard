@@ -389,6 +389,14 @@ body.dfg-standalone .dfg-root .dash-page {
   color: var(--dfg-ink-faint);
 }
 
+/* first line of the footnote block: the unit the table is expressed in */
+.dfg-root .dash-unit {
+  display: block;
+  font-weight: 600;
+  color: var(--dfg-ink-soft);
+  margin-bottom: 3px;
+}
+
 /* ---------- data table — the chart's numbers in rows ---------- */
 .dfg-root .dash-table {
   margin-top: 18px;
@@ -404,7 +412,7 @@ body.dfg-standalone .dfg-root .dash-page {
 
 .dfg-root .dash-tbl th,
 .dfg-root .dash-tbl td {
-  padding: 7px 9px;
+  padding: 7px;
   border-bottom: 1px solid var(--dfg-line);
   text-align: right;
   font-variant-numeric: tabular-nums;
@@ -604,6 +612,13 @@ body.dfg-standalone .dfg-root .dash-page {
   color: var(--dfg-ink-faint) !important;
 }
 
+.dfg-root .dash-unit {
+  display: block !important;
+  font-weight: 600 !important;
+  color: var(--dfg-ink-soft) !important;
+  margin-bottom: 3px !important;
+}
+
 /* data table */
 .dfg-root .dash-table {
   margin-top: 18px !important;
@@ -619,7 +634,7 @@ body.dfg-standalone .dfg-root .dash-page {
 
 .dfg-root .dash-tbl th,
 .dfg-root .dash-tbl td {
-  padding: 7px 9px !important;
+  padding: 7px !important;
   border-bottom: 1px solid var(--dfg-line) !important;
   text-align: right !important;
   font-weight: 400 !important;
@@ -2601,9 +2616,13 @@ window.DFG = {
   var tableHost = mk("div", "dash-table");
   card.appendChild(tableHost);
 
-  /* footnote: the totals shown here exclude sport */
-  card.appendChild(mk("p", "dash-foot",
+  /* unit note + footnote: the totals shown here exclude sport */
+  var unitLine = mk("span", "dash-unit");
+  var foot = mk("p", "dash-foot");
+  foot.appendChild(unitLine);
+  foot.appendChild(document.createTextNode(
     "Во овие средства не влегуваат средствата од спорт."));
+  card.appendChild(foot);
 
   sec.appendChild(card);
 
@@ -2931,6 +2950,19 @@ window.DFG = {
     emptyMsg.style.display = msg ? "flex" : "none";
   }
 
+  /* the single place that names the table's unit (plus the FX rate) */
+  function unitNote() {
+    if (state.unit === "pct") {
+      return "Износите во табелата се изразени во % од вкупниот износ.";
+    }
+    if (state.unit === "eur") {
+      return "Износите во табелата се изразени во €. " +
+             "Износите се конвертирани во € по курс од " +
+             String(RATE).replace(".", ",") + " денари за 1 евро.";
+    }
+    return "Износите во табелата се изразени во МКД.";
+  }
+
   /* ------------------------------------------------------------- table */
   /* The chart's numbers as a table, built from the same collectSeries()
      result, so filtering updates both at once and identically. */
@@ -2944,10 +2976,16 @@ window.DFG = {
     var msg = emptyMessage(rows);
     if (msg) {
       tableHost.appendChild(mk("p", "dash-note", msg));
+      unitLine.textContent = "";
       return;
     }
 
-    var fmt = formatter(state.unit);
+    /* bare numbers only — the unit is stated once, in the note under the
+       table, so every year fits without a horizontal scrollbar */
+    var fmt = state.unit === "pct"
+      ? formatter("pct")
+      : function (v) { return fmtMoney(v, state.unit); };
+    unitLine.textContent = unitNote();
     var tbl = document.createElement("table");
     tbl.className = "dash-tbl";
 

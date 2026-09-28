@@ -307,9 +307,13 @@
   var tableHost = mk("div", "dash-table");
   card.appendChild(tableHost);
 
-  /* footnote: the totals shown here exclude sport */
-  card.appendChild(mk("p", "dash-foot",
+  /* unit note + footnote: the totals shown here exclude sport */
+  var unitLine = mk("span", "dash-unit");
+  var foot = mk("p", "dash-foot");
+  foot.appendChild(unitLine);
+  foot.appendChild(document.createTextNode(
     "Во овие средства не влегуваат средствата од спорт."));
+  card.appendChild(foot);
 
   sec.appendChild(card);
 
@@ -637,6 +641,19 @@
     emptyMsg.style.display = msg ? "flex" : "none";
   }
 
+  /* the single place that names the table's unit (plus the FX rate) */
+  function unitNote() {
+    if (state.unit === "pct") {
+      return "Износите во табелата се изразени во % од вкупниот износ.";
+    }
+    if (state.unit === "eur") {
+      return "Износите во табелата се изразени во €. " +
+             "Износите се конвертирани во € по курс од " +
+             String(RATE).replace(".", ",") + " денари за 1 евро.";
+    }
+    return "Износите во табелата се изразени во МКД.";
+  }
+
   /* ------------------------------------------------------------- table */
   /* The chart's numbers as a table, built from the same collectSeries()
      result, so filtering updates both at once and identically. */
@@ -650,10 +667,16 @@
     var msg = emptyMessage(rows);
     if (msg) {
       tableHost.appendChild(mk("p", "dash-note", msg));
+      unitLine.textContent = "";
       return;
     }
 
-    var fmt = formatter(state.unit);
+    /* bare numbers only — the unit is stated once, in the note under the
+       table, so every year fits without a horizontal scrollbar */
+    var fmt = state.unit === "pct"
+      ? formatter("pct")
+      : function (v) { return fmtMoney(v, state.unit); };
+    unitLine.textContent = unitNote();
     var tbl = document.createElement("table");
     tbl.className = "dash-tbl";
 
