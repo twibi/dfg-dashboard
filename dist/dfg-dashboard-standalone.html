@@ -279,9 +279,11 @@ body.dfg-standalone .dfg-root .dash-page {
   font-weight: 600;
 }
 
+/* the dot is the chart's colour key now (the charts carry no legend), so it
+   is a shade bigger than a bare list bullet */
 .dfg-root .dash-pill .dash-dot {
-  width: 8px;
-  height: 8px;
+  width: 9.5px;
+  height: 9.5px;
   border-radius: 50%;
   background: #c9cfda;
   flex: none;
@@ -358,6 +360,49 @@ body.dfg-standalone .dfg-root .dash-page {
 .dfg-root .dash-btn.primary:hover {
   background: var(--dfg-accent-dark);
   border-color: var(--dfg-accent-dark);
+}
+
+/* ---------- PNG export dialog ---------- */
+/* Modal, so it draws above the page in its own layer: it carries its own
+   panel styling instead of inheriting whatever the host theme uses. */
+.dfg-root dialog.dash-dlg {
+  position: fixed;
+  inset: 0;
+  height: fit-content;
+  margin: auto;
+  width: min(420px, calc(100vw - 32px));
+  max-height: calc(100vh - 32px);
+  overflow: auto;
+  padding: 20px 22px;
+  border: 1px solid var(--dfg-line);
+  border-radius: var(--dfg-radius);
+  background: var(--dfg-card);
+  color: var(--dfg-ink);
+  font-family: inherit;
+  font-size: 14px;
+  text-align: left;
+  box-shadow: 0 18px 48px rgba(16, 24, 40, .28);
+}
+
+/* the UA's own hiding must survive a theme that paints every element */
+.dfg-root dialog.dash-dlg:not([open]) { display: none; }
+
+.dfg-root dialog.dash-dlg::backdrop { background: rgba(16, 24, 40, .5); }
+
+.dfg-root .dash-dlg-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--dfg-main);
+  margin: 0 0 14px;
+}
+
+.dfg-root .dash-dlg .dash-label { margin-bottom: 5px; }
+
+.dfg-root .dash-dlg-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 18px;
 }
 
 /* ---------- Chart card ---------- */
@@ -493,10 +538,11 @@ body.dfg-standalone .dfg-root .dash-page {
   vertical-align: middle;
 }
 
+/* the same colour key as the pill dot, at the same size */
 .dfg-root .dash-tbl-dot {
   display: inline-block;
-  width: 9px;
-  height: 9px;
+  width: 9.5px;
+  height: 9.5px;
   border-radius: 50%;
   margin-right: 7px;
   vertical-align: baseline;
@@ -876,10 +922,56 @@ body.dfg-standalone .dfg-root .dash-page {
 }
 
 .dfg-root .dash-pill .dash-dot {
-  width: 8px !important;
-  height: 8px !important;
+  width: 9.5px !important;
+  height: 9.5px !important;
   border-radius: 50% !important;
 }
+
+/* the export dialog is above everything, so a bare-tag theme rule for
+   `dialog` would otherwise define how it looks */
+.dfg-root dialog.dash-dlg {
+  position: fixed !important;
+  inset: 0 !important;
+  height: fit-content !important;
+  margin: auto !important;
+  width: min(420px, calc(100vw - 32px)) !important;
+  max-width: none !important;
+  max-height: calc(100vh - 32px) !important;
+  overflow: auto !important;
+  padding: 20px 22px !important;
+  border: 1px solid var(--dfg-line) !important;
+  border-radius: var(--dfg-radius) !important;
+  background: var(--dfg-card) !important;
+  color: var(--dfg-ink) !important;
+  font-family: inherit !important;
+  font-size: 14px !important;
+  text-align: left !important;
+  box-shadow: 0 18px 48px rgba(16, 24, 40, .28) !important;
+}
+.dfg-root dialog.dash-dlg:not([open]) { display: none !important; }
+.dfg-root dialog.dash-dlg::backdrop { background: rgba(16, 24, 40, .5) !important; }
+
+.dfg-root .dash-dlg-title {
+  font-size: 16px !important;
+  font-weight: 700 !important;
+  color: var(--dfg-main) !important;
+  margin: 0 0 14px !important;
+  letter-spacing: normal !important;
+  text-transform: none !important;
+  border: 0 !important;
+  line-height: 1.3 !important;
+}
+
+.dfg-root .dash-dlg .dash-label { margin-bottom: 5px !important; }
+
+.dfg-root .dash-dlg-actions {
+  display: flex !important;
+  justify-content: flex-end !important;
+  gap: 8px !important;
+  margin-top: 18px !important;
+}
+
+.dfg-root .dash-dlg-actions .dash-btn { margin: 0 !important; }
 
 .dfg-root .dash-chart2 { margin-top: 24px !important; }
 .dfg-root select.dash-png { max-width: 178px !important; }
@@ -2786,23 +2878,10 @@ window.DFG = {
   var actions = mk("div", "dash-actions");
   var resetBtn = btn("dash-btn", "Ресетирај");
 
-  /* what the PNG button captures: the line chart, the stacked bars or both */
-  var pngSel = mk("select", "dash-select dash-png");
-  [{ v: "line", t: "Графикон 1" },
-   { v: "bars", t: "Графикон 2" },
-   { v: "both", t: "Двата графикони" }].forEach(function (o) {
-    var opt = document.createElement("option");
-    opt.value = o.v;
-    opt.textContent = o.t;
-    pngSel.appendChild(opt);
-  });
-  pngSel.value = "both";
-  pngSel.title = "Што да се вклучи во PNG-сликата";
-  pngSel.setAttribute("aria-label", "Што да се извезе во PNG");
-
+  /* only the button lives here — what goes into the picture is asked for in
+     the export dialog (see "PNG export" below) */
   var pngBtn = btn("dash-btn primary", "Сними PNG");
   actions.appendChild(resetBtn);
-  actions.appendChild(pngSel);
   actions.appendChild(pngBtn);
   gActions.appendChild(actions);
   row1.appendChild(gActions);
@@ -3023,7 +3102,8 @@ window.DFG = {
   /* Chart label: ministries carry their full name with an abbreviated
      prefix — "Министерство за локална самоуправа" becomes
      "Мин. за локална самоуправа" (the client's wording). Everything that
-     is not a ministry keeps its short label, to keep the legend readable. */
+     is not a ministry keeps its short label, so the pills — which now carry
+     this label and its colour dot — stay compact. */
   function chartLabel(inst) {
     var name = inst.name || "";
     /* NB: \w is ASCII-only in JS, so match the Cyrillic word directly */
@@ -3180,10 +3260,9 @@ window.DFG = {
         animation: { duration: 250 },
         interaction: { mode: "index", intersect: false },
         plugins: {
-          legend: {
-            position: "bottom",
-            labels: { usePointStyle: true, pointStyle: "circle", padding: 14 }
-          },
+          /* No legend under the chart: every pill already carries the dot in
+             the series colour, and the tooltip names the series on hover. */
+          legend: { display: false },
           tooltip: {
             callbacks: {
               label: function (ctx) {
@@ -3272,10 +3351,9 @@ window.DFG = {
         animation: { duration: 250 },
         interaction: { mode: "index", intersect: false },
         plugins: {
-          legend: {
-            position: "bottom",
-            labels: { usePointStyle: true, pointStyle: "circle", padding: 14 }
-          },
+          /* no legend here either — the pills' coloured dots are the key,
+             so the two charts do not repeat the same 18 lines */
+          legend: { display: false },
           tooltip: {
             callbacks: {
               label: function (c) {
@@ -3564,6 +3642,73 @@ window.DFG = {
   });
 
   /* ------------------------------------------------------- PNG export */
+  /* What goes into the picture is asked for here, not in the toolbar: the
+     button opens this dialog, the select says which chart(s) to take, Откажи
+     puts it away untouched and Сними runs the export. The choice stays as it
+     was between openings. */
+  var pngDlg = mk("dialog", "dash-dlg");
+
+  var dlgTitle = mk("div", "dash-dlg-title", "Сними PNG");
+  dlgTitle.id = "dash-dlg-title";
+  pngDlg.appendChild(dlgTitle);
+  pngDlg.setAttribute("aria-labelledby", dlgTitle.id);
+
+  var dlgGroup = mk("div", "dash-group");
+  var dlgLabel = mk("div", "dash-label", "Што да се вклучи во сликата");
+  dlgLabel.id = "dash-dlg-label";
+  dlgGroup.appendChild(dlgLabel);
+
+  var pngSel = mk("select", "dash-select dash-png");
+  [{ v: "line", t: "Графикон 1" },
+   { v: "bars", t: "Графикон 2" },
+   { v: "both", t: "Двата графикони" }].forEach(function (o) {
+    var opt = document.createElement("option");
+    opt.value = o.v;
+    opt.textContent = o.t;
+    pngSel.appendChild(opt);
+  });
+  pngSel.value = "both";
+  pngSel.title = "Што да се вклучи во PNG-сликата";
+  pngSel.setAttribute("aria-labelledby", dlgLabel.id);
+  dlgGroup.appendChild(pngSel);
+  pngDlg.appendChild(dlgGroup);
+
+  var dlgActions = mk("div", "dash-dlg-actions");
+  var cancelBtn = btn("dash-btn", "Откажи");
+  var saveBtn = btn("dash-btn primary", "Сними");
+  dlgActions.appendChild(cancelBtn);
+  dlgActions.appendChild(saveBtn);
+  pngDlg.appendChild(dlgActions);
+
+  root.appendChild(pngDlg);
+
+  function closeDlg() {
+    if (pngDlg.open) pngDlg.close();
+    else pngDlg.removeAttribute("open");
+  }
+
+  pngBtn.addEventListener("click", function () {
+    if (pngDlg.open) return;
+    if (typeof pngDlg.showModal === "function") pngDlg.showModal();
+    else pngDlg.setAttribute("open", "");   /* very old browsers: not modal */
+  });
+
+  cancelBtn.addEventListener("click", closeDlg);
+
+  saveBtn.addEventListener("click", function () {
+    closeDlg();
+    exportPNG();
+  });
+
+  /* a click on the dimmed area behind the panel is Откажи too — only outside
+     the panel, so a slip inside the dialog never throws the choice away */
+  pngDlg.addEventListener("click", function (ev) {
+    var r = pngDlg.getBoundingClientRect();
+    var inside = ev.clientX >= r.left && ev.clientX <= r.right &&
+                 ev.clientY >= r.top && ev.clientY <= r.bottom;
+    if (!inside) closeDlg();
+  });
+
   /* Chart.js defers its paint to requestAnimationFrame, which the browser
      suspends while the tab is hidden — so an export taken at that moment
      (or mid-animation) would be blank. Force a synchronous paint first. */
@@ -3582,7 +3727,7 @@ window.DFG = {
   }
 
   function exportPNG() {
-    /* the select next to the button decides what goes into the picture */
+    /* the select in the dialog decides what goes into the picture */
     var parts = [];
     if (pngSel.value !== "bars" && chart) {
       parts.push({ chart: chart, src: canvas });
@@ -3644,8 +3789,6 @@ window.DFG = {
     while (t.length > 1 && ctx.measureText(t + "…").width > maxW) t = t.slice(0, -1);
     return t + "…";
   }
-
-  pngBtn.addEventListener("click", exportPNG);
 
   refresh();
 })();

@@ -362,23 +362,10 @@
   var actions = mk("div", "dash-actions");
   var resetBtn = btn("dash-btn", "Ресетирај");
 
-  /* what the PNG button captures: the line chart, the stacked bars or both */
-  var pngSel = mk("select", "dash-select dash-png");
-  [{ v: "line", t: "Графикон 1" },
-   { v: "bars", t: "Графикон 2" },
-   { v: "both", t: "Двата графикони" }].forEach(function (o) {
-    var opt = document.createElement("option");
-    opt.value = o.v;
-    opt.textContent = o.t;
-    pngSel.appendChild(opt);
-  });
-  pngSel.value = "both";
-  pngSel.title = "Што да се вклучи во PNG-сликата";
-  pngSel.setAttribute("aria-label", "Што да се извезе во PNG");
-
+  /* only the button lives here — what goes into the picture is asked for in
+     the export dialog (see "PNG export" below) */
   var pngBtn = btn("dash-btn primary", "Сними PNG");
   actions.appendChild(resetBtn);
-  actions.appendChild(pngSel);
   actions.appendChild(pngBtn);
   gActions.appendChild(actions);
   row1.appendChild(gActions);
@@ -599,7 +586,8 @@
   /* Chart label: ministries carry their full name with an abbreviated
      prefix — "Министерство за локална самоуправа" becomes
      "Мин. за локална самоуправа" (the client's wording). Everything that
-     is not a ministry keeps its short label, to keep the legend readable. */
+     is not a ministry keeps its short label, so the pills — which now carry
+     this label and its colour dot — stay compact. */
   function chartLabel(inst) {
     var name = inst.name || "";
     /* NB: \w is ASCII-only in JS, so match the Cyrillic word directly */
@@ -756,10 +744,9 @@
         animation: { duration: 250 },
         interaction: { mode: "index", intersect: false },
         plugins: {
-          legend: {
-            position: "bottom",
-            labels: { usePointStyle: true, pointStyle: "circle", padding: 14 }
-          },
+          /* No legend under the chart: every pill already carries the dot in
+             the series colour, and the tooltip names the series on hover. */
+          legend: { display: false },
           tooltip: {
             callbacks: {
               label: function (ctx) {
@@ -848,10 +835,9 @@
         animation: { duration: 250 },
         interaction: { mode: "index", intersect: false },
         plugins: {
-          legend: {
-            position: "bottom",
-            labels: { usePointStyle: true, pointStyle: "circle", padding: 14 }
-          },
+          /* no legend here either — the pills' coloured dots are the key,
+             so the two charts do not repeat the same 18 lines */
+          legend: { display: false },
           tooltip: {
             callbacks: {
               label: function (c) {
@@ -1140,6 +1126,73 @@
   });
 
   /* ------------------------------------------------------- PNG export */
+  /* What goes into the picture is asked for here, not in the toolbar: the
+     button opens this dialog, the select says which chart(s) to take, Откажи
+     puts it away untouched and Сними runs the export. The choice stays as it
+     was between openings. */
+  var pngDlg = mk("dialog", "dash-dlg");
+
+  var dlgTitle = mk("div", "dash-dlg-title", "Сними PNG");
+  dlgTitle.id = "dash-dlg-title";
+  pngDlg.appendChild(dlgTitle);
+  pngDlg.setAttribute("aria-labelledby", dlgTitle.id);
+
+  var dlgGroup = mk("div", "dash-group");
+  var dlgLabel = mk("div", "dash-label", "Што да се вклучи во сликата");
+  dlgLabel.id = "dash-dlg-label";
+  dlgGroup.appendChild(dlgLabel);
+
+  var pngSel = mk("select", "dash-select dash-png");
+  [{ v: "line", t: "Графикон 1" },
+   { v: "bars", t: "Графикон 2" },
+   { v: "both", t: "Двата графикони" }].forEach(function (o) {
+    var opt = document.createElement("option");
+    opt.value = o.v;
+    opt.textContent = o.t;
+    pngSel.appendChild(opt);
+  });
+  pngSel.value = "both";
+  pngSel.title = "Што да се вклучи во PNG-сликата";
+  pngSel.setAttribute("aria-labelledby", dlgLabel.id);
+  dlgGroup.appendChild(pngSel);
+  pngDlg.appendChild(dlgGroup);
+
+  var dlgActions = mk("div", "dash-dlg-actions");
+  var cancelBtn = btn("dash-btn", "Откажи");
+  var saveBtn = btn("dash-btn primary", "Сними");
+  dlgActions.appendChild(cancelBtn);
+  dlgActions.appendChild(saveBtn);
+  pngDlg.appendChild(dlgActions);
+
+  root.appendChild(pngDlg);
+
+  function closeDlg() {
+    if (pngDlg.open) pngDlg.close();
+    else pngDlg.removeAttribute("open");
+  }
+
+  pngBtn.addEventListener("click", function () {
+    if (pngDlg.open) return;
+    if (typeof pngDlg.showModal === "function") pngDlg.showModal();
+    else pngDlg.setAttribute("open", "");   /* very old browsers: not modal */
+  });
+
+  cancelBtn.addEventListener("click", closeDlg);
+
+  saveBtn.addEventListener("click", function () {
+    closeDlg();
+    exportPNG();
+  });
+
+  /* a click on the dimmed area behind the panel is Откажи too — only outside
+     the panel, so a slip inside the dialog never throws the choice away */
+  pngDlg.addEventListener("click", function (ev) {
+    var r = pngDlg.getBoundingClientRect();
+    var inside = ev.clientX >= r.left && ev.clientX <= r.right &&
+                 ev.clientY >= r.top && ev.clientY <= r.bottom;
+    if (!inside) closeDlg();
+  });
+
   /* Chart.js defers its paint to requestAnimationFrame, which the browser
      suspends while the tab is hidden — so an export taken at that moment
      (or mid-animation) would be blank. Force a synchronous paint first. */
@@ -1158,7 +1211,7 @@
   }
 
   function exportPNG() {
-    /* the select next to the button decides what goes into the picture */
+    /* the select in the dialog decides what goes into the picture */
     var parts = [];
     if (pngSel.value !== "bars" && chart) {
       parts.push({ chart: chart, src: canvas });
@@ -1220,8 +1273,6 @@
     while (t.length > 1 && ctx.measureText(t + "…").width > maxW) t = t.slice(0, -1);
     return t + "…";
   }
-
-  pngBtn.addEventListener("click", exportPNG);
 
   refresh();
 })();

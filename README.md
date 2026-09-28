@@ -14,7 +14,8 @@ society organisations in North Macedonia, built from
   same numbers again as **vertical stacked bars** directly under it (one bar
   per year, one segment per institution, no total line — the stack adds up
   what is switched on). Both charts and the data table share every filter,
-  so they can never disagree.
+  so they can never disagree. Neither chart carries a legend — the coloured
+  dot in front of every institution in the filter and in the table is the key.
 - **Локално ниво** — placeholder for the municipality × year table. The data
   does not exist yet, so it shows a "coming soon" empty state (pills replaced
   by a note, context overlay disabled) instead of a broken chart.

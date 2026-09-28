@@ -50,6 +50,7 @@ REQUIRED_CSS_CLASSES = (
     "dash-mini", "dash-dot", "dash-note",
     "dash-caption", "dash-foot", "dash-chart", "dash-chart2",
     "dash-empty", "dash-png",
+    "dash-dlg", "dash-dlg-title", "dash-dlg-actions",
     "dash-table", "dash-tbl", "dash-tbl-dot", "dash-unit", "dash-src",
     "dash-sort", "dash-sort-ico",
 )
