@@ -438,6 +438,40 @@ body.dfg-standalone .dfg-root .dash-page {
 
 .dfg-root .dash-tbl thead th:first-child { text-align: left; }
 
+/* every header is a click-to-sort button. The cell keeps its font, size,
+   case and alignment — the button only adds the pointer and the arrow,
+   so nothing about the table's metrics changes. */
+.dfg-root .dash-tbl .dash-sort {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 5px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  font-family: inherit;
+  font-size: inherit;
+  font-weight: inherit;
+  font-style: inherit;
+  line-height: inherit;
+  color: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  text-align: inherit;
+  cursor: pointer;
+}
+.dfg-root .dash-tbl .dash-sort:hover { text-decoration: underline; }
+.dfg-root .dash-tbl .dash-sort:focus-visible {
+  outline: 2px solid var(--dfg-main);
+  outline-offset: 2px;
+}
+.dfg-root .dash-tbl .dash-sort-ico {
+  font-size: 9px;
+  line-height: 1;
+  opacity: .5;
+}
+.dfg-root .dash-tbl th[aria-sort] .dash-sort-ico { opacity: 1; }
+
 /* the name column stays visible when the table scrolls sideways.
    Names are the FULL institution names here: a fixed 280px column lets them
    wrap onto (at most) two lines instead of pushing the table wider. */
@@ -685,6 +719,41 @@ body.dfg-standalone .dfg-root .dash-page {
 
 .dfg-root .dash-tbl thead th:first-child,
 .dfg-root .dash-tbl th[scope="row"] { text-align: left !important; }
+
+/* themes ship bare `button { font-size: 20px !important }` rules — the
+   header buttons have to win against those, so they are restated here */
+.dfg-root .dash-tbl .dash-sort {
+  display: inline-flex !important;
+  align-items: baseline !important;
+  gap: 5px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: none !important;
+  background-color: transparent !important;
+  font-family: inherit !important;
+  font-size: inherit !important;
+  font-weight: inherit !important;
+  font-style: inherit !important;
+  line-height: inherit !important;
+  color: inherit !important;
+  letter-spacing: inherit !important;
+  text-transform: inherit !important;
+  text-align: inherit !important;
+  cursor: pointer !important;
+}
+.dfg-root .dash-tbl .dash-sort:hover { text-decoration: underline !important; }
+.dfg-root .dash-tbl .dash-sort:focus-visible {
+  outline: 2px solid var(--dfg-main) !important;
+  outline-offset: 2px !important;
+}
+.dfg-root .dash-tbl .dash-sort-ico {
+  font-size: 9px !important;
+  line-height: 1 !important;
+  opacity: .5 !important;
+}
+.dfg-root .dash-tbl th[aria-sort] .dash-sort-ico { opacity: 1 !important; }
 
 .dfg-root .dash-tbl tbody tr { height: 48px !important; }
 
@@ -2383,22 +2452,25 @@ window.DFG = {
 
   /* Institution colours: the GNOME HIG palette
      (developer.gnome.org/hig/reference/palette.html) and nothing else —
-     only its shade 1 (light) and shade 5 (dark) of every hue.
+     shade 4 on the dark side, shade 1 on the light side.
 
      The hues are handed out in the order below and brown comes last, so it
      is used only once the other hues have run out; after brown come the
-     palette's neutral greys. Six hues x 2 = 12 colours is not enough for 17
-     institutions, so brown (x2) and the greys (x3) are the exact overflow. */
-  var SHADE_5 = [
-    "#1a5fb4",   /* Blue 5 */
-    "#26a269",   /* Green 5 */
-    "#613583",   /* Purple 5 */
-    "#c64600",   /* Orange 5 */
-    "#a51d2d",   /* Red 5 */
-    "#e5a50a",   /* Yellow 5 */
-    "#63452c",   /* Brown 5 */
-    "#77767b",   /* Dark 1 */
-    "#000000"    /* Dark 5 */
+     palette's neutral greys — Dark 1 stays (it is a shade 1), Dark 5 was
+     swapped for Dark 4 along with the rest of the 5s, and the light tier's
+     grey moved from Light 5 to Light 4. Six hues x 2 = 12 colours is not
+     enough for 17 institutions, so brown (x2) and the greys (x3) are the
+     exact overflow. */
+  var SHADE_4 = [
+    "#1c71d8",   /* Blue 4 */
+    "#2ec27e",   /* Green 4 */
+    "#813d9c",   /* Purple 4 */
+    "#e66100",   /* Orange 4 */
+    "#c01c28",   /* Red 4 */
+    "#f5c211",   /* Yellow 4 */
+    "#865e3c",   /* Brown 4 */
+    "#77767b",   /* Dark 1 — kept: it is a shade 1 */
+    "#241f31"    /* Dark 4 */
   ];
   var SHADE_1 = [
     "#99c1f1",   /* Blue 1 */
@@ -2408,13 +2480,13 @@ window.DFG = {
     "#f66151",   /* Red 1 */
     "#f9f06b",   /* Yellow 1 */
     "#cdab8f",   /* Brown 1 */
-    "#9a9996"    /* Light 5 */
+    "#c0bfbc"    /* Light 4 (was Light 5) */
   ];
 
   var colorCache = {};
 
   /* One colour per institution, ranked by how much it paid out: the nine
-     biggest take the shade-5 (dark) slots, the rest the shade-1 (light)
+     biggest take the shade-4 (dark) slots, the rest the shade-1 (light)
      ones — so a ministry that paid millions reads dark and one that paid
      nothing reads pale grey. The ranking uses the full 2018–2025 series and
      is computed once, so no filter can ever reshuffle the colours. */
@@ -2430,7 +2502,7 @@ window.DFG = {
     /* biggest first; ties keep the workbook's own order */
     order.sort(function (a, b) { return b.sum - a.sum || a.idx - b.idx; });
 
-    var slots = SHADE_5.concat(SHADE_1);   /* 17 colours for 17 rows */
+    var slots = SHADE_4.concat(SHADE_1);   /* 17 colours for 17 rows */
     var map = {};
     order.forEach(function (o, rank) {
       map[o.id] = slots[rank] || SHADE_1[rank % SHADE_1.length];
@@ -2524,6 +2596,8 @@ window.DFG = {
     showTotal: true,
     from: 0,
     to: YEARS.length - 1,
+    sortKey: null,      /* table order: "name", a year, or null = workbook order */
+    sortDir: 1,
     sel: {}
   };
   INSTITUTIONS.forEach(function (i) { state.sel[i.id] = true; });
@@ -3279,8 +3353,13 @@ window.DFG = {
   /* ------------------------------------------------------------- table */
   /* The chart's numbers as a table, built from the same collectSeries()
      result, so filtering updates both at once and identically. */
+  /* the data the table was last built from, so a header click can rebuild
+     it without touching the charts */
+  var tableData = null;
+
   function renderTable(data) {
     tableHost.innerHTML = "";
+    tableData = data;
 
     var ctx = collectContext(data.idxs);
     var rows = data.series.length + (data.total ? 1 : 0) + (ctx ? 1 : 0);
@@ -3301,10 +3380,50 @@ window.DFG = {
     var tbl = document.createElement("table");
     tbl.className = "dash-tbl";
 
+    /* every column header is a button: one click sorts (names A→Z, years
+       big→small), the second flips the direction, the third goes back to the
+       workbook's own order. Only the rows move — Вкупно and the context row
+       stay pinned at the bottom and the charts keep their own order. */
+    function sortBy(key) {
+      var def = key === "name" ? 1 : -1;
+      if (state.sortKey !== key) {
+        state.sortKey = key;
+        state.sortDir = def;
+      } else if (state.sortDir === def) {
+        state.sortDir = -def;
+      } else {
+        state.sortKey = null;
+        state.sortDir = 1;
+      }
+      renderTable(tableData);
+    }
+
+    function headCell(label, key, hint) {
+      var th = document.createElement("th");
+      th.scope = "col";
+      if (key === "name") th.className = "dash-tbl-corner";
+      var on = state.sortKey === key;
+      if (on) {
+        th.setAttribute("aria-sort", state.sortDir === 1 ? "ascending" : "descending");
+      }
+      var b = document.createElement("button");
+      b.type = "button";
+      b.className = "dash-sort";
+      b.title = hint;
+      b.appendChild(document.createTextNode(label));
+      b.appendChild(mk("span", "dash-sort-ico",
+        on ? (state.sortDir === 1 ? "▲" : "▼") : "↕"));
+      b.addEventListener("click", function () { sortBy(key); });
+      th.appendChild(b);
+      return th;
+    }
+
     var thead = document.createElement("thead");
     var hr = document.createElement("tr");
-    hr.appendChild(mk("th", "dash-tbl-corner", "Институција"));
-    data.labels.forEach(function (y) { hr.appendChild(mk("th", null, y)); });
+    hr.appendChild(headCell("Институција", "name", "Сортирај по име"));
+    data.labels.forEach(function (y) {
+      hr.appendChild(headCell(String(y), y, "Сортирај по " + y));
+    });
     thead.appendChild(hr);
     tbl.appendChild(thead);
 
@@ -3331,7 +3450,32 @@ window.DFG = {
       tbody.appendChild(tr);
     }
 
-    data.series.forEach(function (s) {
+    /* institution rows — the workbook's own order unless a column sorts
+       them; Вкупно and the context row always stay at the bottom */
+    var insts = data.series.slice();
+    if (state.sortKey !== null) {
+      var key = state.sortKey;
+      var dir = state.sortDir;
+      var pos = key === "name" ? -1 : data.labels.indexOf(key);
+      if (key !== "name" && pos < 0) {
+        state.sortKey = null;          /* that year dropped out of the range */
+        state.sortDir = 1;
+      } else {
+        insts.sort(function (a, b) {
+          if (key === "name") {
+            return dir * (a.full || a.name).localeCompare(b.full || b.name, "mk");
+          }
+          var va = a.values[pos];
+          var vb = b.values[pos];
+          var ma = va === null || va === undefined;
+          var mb = vb === null || vb === undefined;
+          if (ma || mb) return ma === mb ? 0 : (ma ? 1 : -1);   /* gaps last */
+          return dir * (va - vb);
+        });
+      }
+    }
+
+    insts.forEach(function (s) {
       addRow(s.full || s.name, s.values, fmt, null, s.color);
     });
     if (data.total) addRow("Вкупно", data.total, fmt, "is-total", MAIN);
@@ -3413,6 +3557,8 @@ window.DFG = {
     state.from = 0;
     state.to = YEARS.length - 1;
     state.showTotal = true;
+    state.sortKey = null;
+    state.sortDir = 1;
     INSTITUTIONS.forEach(function (i) { state.sel[i.id] = true; });
     refresh();
   });

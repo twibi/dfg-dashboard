@@ -51,6 +51,7 @@ REQUIRED_CSS_CLASSES = (
     "dash-caption", "dash-foot", "dash-chart", "dash-chart2",
     "dash-empty", "dash-png",
     "dash-table", "dash-tbl", "dash-tbl-dot", "dash-unit", "dash-src",
+    "dash-sort", "dash-sort-ico",
 )
 
 FORBIDDEN_PATTERNS = (
