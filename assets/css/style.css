@@ -391,6 +391,12 @@ body.dfg-standalone .dfg-root .dash-page {
   margin-bottom: 3px;
 }
 
+/* data provenance, the last line of the footnote block */
+.dfg-root .dash-src {
+  display: block;
+  margin-top: 4px;
+}
+
 /* ---------- data table — the chart's numbers in rows ---------- */
 .dfg-root .dash-table {
   margin-top: 18px;
@@ -637,6 +643,11 @@ body.dfg-standalone .dfg-root .dash-page {
   font-weight: 600 !important;
   color: var(--dfg-ink-soft) !important;
   margin-bottom: 3px !important;
+}
+
+.dfg-root .dash-src {
+  display: block !important;
+  margin-top: 4px !important;
 }
 
 /* data table */

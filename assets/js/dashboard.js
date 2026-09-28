@@ -369,12 +369,15 @@
   var tableHost = mk("div", "dash-table");
   card.appendChild(tableHost);
 
-  /* unit note + footnote: the totals shown here exclude sport */
+  /* unit note + footnote: the totals shown here exclude sport, and where
+     the numbers come from — the last line of the block */
   var unitLine = mk("span", "dash-unit");
   var foot = mk("p", "dash-foot");
   foot.appendChild(unitLine);
   foot.appendChild(document.createTextNode(
     "Во овие средства не влегуваат средствата од спорт."));
+  foot.appendChild(mk("span", "dash-src",
+    "Доставени податоци од барања за пристап до информации од јавен карактер."));
   card.appendChild(foot);
 
   sec.appendChild(card);
