@@ -107,10 +107,11 @@ sums and percentages keep using the workbook's own text):
 |---|---|---|
 | data table (first column) | full name | Министерство за локална самоуправа |
 | chart legend + tooltip | ministries abbreviated, the rest short | Мин. за локална самоуправа |
-| institution pills | short label | Локална самоуправа |
+| institution pills | same as the chart | Мин. за локална самоуправа |
 
 Only names starting with *Министерство/Министертсво* get the `Мин. ` prefix —
-non-ministries keep their short label so the legend stays readable.
+non-ministries keep their short label so the legend and the pill row stay
+readable (hovering a pill still shows the full name).
 
 ## Design
 

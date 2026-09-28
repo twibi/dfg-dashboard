@@ -369,7 +369,7 @@
       b.type = "button";
       b.style.setProperty("--dfg-pill", PALETTE[idx % PALETTE.length]);
       b.appendChild(mk("span", "dash-dot"));
-      b.appendChild(document.createTextNode(inst.short));
+      b.appendChild(document.createTextNode(chartLabel(inst)));
       b.title = inst.name;
       b.addEventListener("click", function () {
         state.sel[inst.id] = !state.sel[inst.id];
