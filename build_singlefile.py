@@ -49,7 +49,7 @@ REQUIRED_CSS_CLASSES = (
     "dash-pill-line", "dash-pills", "dash-pill", "dash-pill-actions",
     "dash-mini", "dash-dot", "dash-note",
     "dash-caption", "dash-foot", "dash-chart", "dash-chart2",
-    "dash-chart2-title", "dash-empty", "dash-png",
+    "dash-empty", "dash-png",
     "dash-table", "dash-tbl", "dash-tbl-dot", "dash-unit", "dash-src",
 )
 

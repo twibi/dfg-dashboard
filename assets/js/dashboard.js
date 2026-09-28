@@ -359,9 +359,9 @@
 
   /* what the PNG button captures: the line chart, the stacked bars or both */
   var pngSel = mk("select", "dash-select dash-png");
-  [{ v: "line", t: "Само линискиот" },
-   { v: "bars", t: "Само купчестиот" },
-   { v: "both", t: "Дваата графикони" }].forEach(function (o) {
+  [{ v: "line", t: "Графикон 1" },
+   { v: "bars", t: "Графикон 2" },
+   { v: "both", t: "Двата графикони" }].forEach(function (o) {
     var opt = document.createElement("option");
     opt.value = o.v;
     opt.textContent = o.t;
@@ -411,9 +411,6 @@
   /* second chart: vertical stacked bars — one bar per year, one segment per
      institution. It reads the same collectSeries() data as the line chart
      and the table, so every filter drives all three views at once. */
-  var chart2Title = mk("div", "dash-chart2-title",
-    "Распределба по институции — секој бар е година, секој сегмент е институција");
-  card.appendChild(chart2Title);
   var wrap2 = mk("div", "dash-chart dash-chart2");
   var canvas2 = document.createElement("canvas");
   wrap2.appendChild(canvas2);
@@ -673,8 +670,7 @@
   /* shared empty state: the chart overlay and the table show the same words */
   function emptyMessage(rows) {
     if (!level().available) {
-      return "Локално ниво — податоците по општини уште не се внесени. " +
-             "Префрли се на национално ниво за да го видите прегледот.";
+      return "Локално ниво — податоците по општини уште не се внесени.";
     }
     if (rows) return "";
     return selectedInstitutions().length
@@ -1088,11 +1084,10 @@
     /* the select next to the button decides what goes into the picture */
     var parts = [];
     if (pngSel.value !== "bars" && chart) {
-      parts.push({ chart: chart, src: canvas, title: null });
+      parts.push({ chart: chart, src: canvas });
     }
     if (pngSel.value !== "line" && chart2) {
-      parts.push({ chart: chart2, src: canvas2,
-                   title: chart2Title.textContent });
+      parts.push({ chart: chart2, src: canvas2 });
     }
     if (!parts.length) return;
 
@@ -1102,11 +1097,10 @@
 
     var pad = 36;
     var gap = 26;
-    var titleH = 30;
     var headH = ins.textContent ? 96 : 66;
     var bodyH = 0;
     parts.forEach(function (p, i) {
-      bodyH += (p.title ? titleH : 0) + p.src.height + (i ? gap : 0);
+      bodyH += p.src.height + (i ? gap : 0);
     });
 
     var out = document.createElement("canvas");
@@ -1130,12 +1124,6 @@
     var y = headH;
     parts.forEach(function (p, i) {
       if (i) y += gap;
-      if (p.title) {
-        ctx.fillStyle = INK;
-        ctx.font = "700 18px 'Segoe UI', Arial, sans-serif";
-        ctx.fillText(fitText(ctx, p.title, out.width - pad * 2), pad, y);
-        y += titleH;
-      }
       ctx.drawImage(p.src, 0, y);
       y += p.src.height;
     });

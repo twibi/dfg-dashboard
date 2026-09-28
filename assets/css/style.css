@@ -478,13 +478,7 @@ body.dfg-standalone .dfg-root .dash-page {
 .dfg-root .dash-chart { position: relative; height: 470px !important; }
 
 /* the stacked bar chart sits directly under the line chart */
-.dfg-root .dash-chart2-title {
-  margin-top: 24px;
-  font-size: 13.5px;
-  font-weight: 700;
-  color: var(--dfg-ink);
-}
-.dfg-root .dash-chart2 { margin-top: 8px; }
+.dfg-root .dash-chart2 { margin-top: 24px; }
 
 /* what the PNG button exports */
 .dfg-root select.dash-png { max-width: 178px; }
@@ -809,13 +803,7 @@ body.dfg-standalone .dfg-root .dash-page {
   border-radius: 50% !important;
 }
 
-.dfg-root .dash-chart2-title {
-  font-size: 13.5px !important;
-  font-weight: 700 !important;
-  color: var(--dfg-ink) !important;
-  margin-top: 24px !important;
-}
-.dfg-root .dash-chart2 { margin-top: 8px !important; }
+.dfg-root .dash-chart2 { margin-top: 24px !important; }
 .dfg-root select.dash-png { max-width: 178px !important; }
 
 @media (max-width: 860px) {
