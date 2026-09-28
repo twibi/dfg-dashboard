@@ -423,7 +423,11 @@ body.dfg-standalone .dfg-root .dash-page {
 
 .dfg-root .dash-tbl thead th:first-child { text-align: left; }
 
-/* the name column stays visible when the table scrolls sideways */
+/* the name column stays visible when the table scrolls sideways.
+   Names are the FULL institution names here: a fixed 280px column lets them
+   wrap onto (at most) two lines instead of pushing the table wider. */
+.dfg-root .dash-tbl tbody tr { height: 48px; }   /* two lines of name */
+
 .dfg-root .dash-tbl th[scope="row"] {
   position: sticky;
   left: 0;
@@ -432,6 +436,12 @@ body.dfg-standalone .dfg-root .dash-page {
   text-align: left;
   font-weight: 600;
   color: var(--dfg-ink);
+  width: 280px;
+  min-width: 280px;
+  max-width: 280px;
+  white-space: normal;
+  line-height: 1.35;
+  vertical-align: middle;
 }
 
 .dfg-root .dash-tbl-dot {
@@ -650,12 +660,21 @@ body.dfg-standalone .dfg-root .dash-page {
 .dfg-root .dash-tbl thead th:first-child,
 .dfg-root .dash-tbl th[scope="row"] { text-align: left !important; }
 
+.dfg-root .dash-tbl tbody tr { height: 48px !important; }
+
 .dfg-root .dash-tbl th[scope="row"] {
   position: sticky !important;
   left: 0 !important;
   background: var(--dfg-card) !important;
   color: var(--dfg-ink) !important;
   font-weight: 600 !important;
+  width: 280px !important;
+  min-width: 280px !important;
+  max-width: 280px !important;
+  white-space: normal !important;
+  line-height: 1.35 !important;
+  text-align: left !important;
+  vertical-align: middle !important;
 }
 
 .dfg-root .dash-tbl .is-total > th,

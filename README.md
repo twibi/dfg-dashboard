@@ -1,4 +1,4 @@
-# ДФГ — Државно финансирање на граѓанското општество
+# ДФГ — Државно финансирање за граѓански организации
 
 An interactive, **fully static** dashboard for the state funding of civil
 society organisations in North Macedonia, built from
@@ -46,8 +46,14 @@ chart and the table together, and the two can never disagree:
 
 - units, year range, institution selection, the `Вкупно` toggle and the
   context switch all apply to both;
-- values are formatted exactly like the chart tooltip (`.` thousands,
-  `,` decimals, `МКД` / `€` / `%`), missing years show `–`;
+- rows carry the **full institution names** in a fixed 280 px column that
+  wraps them onto two lines (rows are 48 px tall), so the eight year columns
+  still fit side by side; numbers are bare (`.` thousands / `,` decimals),
+  missing years show `–`, and `%` is the only unit left inside a cell;
+- the unit is therefore stated once, in a note between the table and the
+  footnote: „Износите во табелата се изразени во МКД / € / % од вкупниот
+  износ“ — for € it is followed by the FX line „Износите се конвертирани во
+  € по курс од 61,5 денари за 1 евро“;
 - the first column is sticky, so it stays readable when the table scrolls
   sideways on a narrow screen;
 - the empty states (local level, no institution selected) show the same
@@ -69,6 +75,21 @@ the caption above the chart restates the current unit and year range.
 - `"/"` and blank cells → `null` → a gap in the line. `0` → a real 0.
 - Percentages are shares of the fixed basis's annual total, so the total
   line itself always reads 100 %.
+- **Cell-level corrections** — applied once in `dashboard.js` to the rows
+  that are plotted (the workbook's own summary rows, i.e. the Вкупно line
+  and the headline sentence, are not touched):
+  - *Министерство за правда* keeps **2022 and 2025** only — those are the
+    free legal-aid services for associations; every other year in that row
+    is political-party funding;
+  - *Министерство за спорт* keeps **2018–2023** — 2024 and 2025 are the new
+    ministry's grants to federations and individual athletes only, which are
+    out of scope (earlier years are the Young People programme for
+    associations).
+  A blanked cell behaves exactly like a missing year: a gap in the line and
+  `–` in the table.
+- The headline sentence reads „Во YYYY година, вкупните средства изнесуваат
+  …“ with the share rounded to a whole percent (7,67 % → 8 %); the basis is
+  no longer spelled out there — the footnote under the chart carries it.
 
 ## Design
 

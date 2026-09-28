@@ -39,11 +39,6 @@
     { v: "income", t: "Приходи на ГО" },
     { v: "share", t: "Удел во приходите" }
   ];
-  var BASIS_LABEL = {
-    all: "вкупните средства од државниот буџет за граѓански организации",
-    noParties: "вкупните средства без политичките партии",
-    noPartiesSport: "вкупните средства без политичките партии и спортот"
-  };
 
   /* Standalone site (index.html) sets this body class; a WordPress page
      embedding the dashboard does not — so we never touch the tab title,
@@ -70,6 +65,44 @@
   var LEVELS = payload.levels;
   var NATIONAL = LEVELS.national;
   var INSTITUTIONS = NATIONAL.institutions;
+
+  /* -------------------------------------------------- data corrections
+     Cell-level corrections agreed with the client (README → Data rules).
+     They are applied once, to the rows that are actually plotted, so the
+     chart, the table, the pills and the Top-5 ranking all see the same
+     cleaned numbers. The workbook's own summary rows — the Вкупно line and
+     the headline sentence — are read separately and are not touched here. */
+  function idOf(snippet) {
+    var found = null;
+    INSTITUTIONS.forEach(function (inst) {
+      if (found) return;
+      var hay = ((inst.name || "") + " " + (inst.short || "")).toLowerCase();
+      if (hay.indexOf(snippet) !== -1) found = inst.id;
+    });
+    return found;
+  }
+
+  /* blank the given years (keep=true: keep only those years, drop the rest;
+     keep=false: drop exactly those years) */
+  function blankYears(id, years, keep) {
+    var rows = NATIONAL.series && NATIONAL.series.total;
+    if (!id || !rows || !rows[id]) return;
+    var arr = rows[id];
+    YEARS.forEach(function (y, i) {
+      var inList = years.indexOf(y) !== -1;
+      if (keep ? !inList : inList) {
+        if (arr[i] !== null && arr[i] !== undefined) arr[i] = null;
+      }
+    });
+  }
+
+  /* Правда: 2022 and 2025 only — those are the free legal-aid services for
+     associations; every other year is political-party funding. */
+  blankYears(idOf("правда"), [2022, 2025], true);
+  /* Спорт: nothing for 2024 and 2025 — the new ministry only funds
+     federations and individual athletes; earlier years are the Young People
+     programme for associations. */
+  blankYears(idOf("спорт"), [2024, 2025], false);
 
   /* ---------------------------------------------------------------- state */
   var state = {
@@ -165,7 +198,7 @@
     var inner = mk("div", "dash-topbar-inner");
     var brand = mk("a", "dash-brand");
     brand.href = "#top";
-    brand.innerHTML = 'ДФГ <span>Државно финансирање на граѓанското општество</span>';
+    brand.innerHTML = 'ДФГ <span>Државно финансирање за граѓански организации</span>';
     inner.appendChild(brand);
     topbar.appendChild(inner);
     root.appendChild(topbar);
@@ -179,7 +212,7 @@
 
   var head = mk("div", "dash-head");
   /* WordPress reserves h1 for the page title — embedded we start at h2. */
-  var h1 = mk(STANDALONE ? "h1" : "h2", null, "Државно финансирање на граѓанското општество");
+  var h1 = mk(STANDALONE ? "h1" : "h2", null, "Државно финансирање за граѓански организации");
   var sub = mk("p", "dash-sub",
     "Средства што органите на државната управа ги распределуваат за " +
     "граѓански организации, 2018–2025.");
@@ -472,7 +505,7 @@
         return xform(src[i], denom ? denom[i] : null);
       });
       if (vals.every(function (v) { return v === null; })) return;
-      series.push({ id: inst.id, name: inst.short,
+      series.push({ id: inst.id, name: inst.short, full: inst.name,
                     color: PALETTE[idx % PALETTE.length], values: vals });
     });
 
@@ -711,7 +744,7 @@
     }
 
     data.series.forEach(function (s) {
-      addRow(s.name, s.values, fmt, null, s.color);
+      addRow(s.full || s.name, s.values, fmt, null, s.color);
     });
     if (data.total) addRow("Вкупно", data.total, fmt, "is-total", MAIN);
     if (ctx) addRow(ctx.name, ctx.values, ctx.fmt, "is-ctx", ctx.color);
@@ -737,15 +770,15 @@
     } else {
       var eur = Math.round(v / RATE);
       ins.textContent =
-        "Во " + y + " година, " + BASIS_LABEL[state.basis] + " изнесуваа " +
+        "Во " + y + " година, вкупните средства изнесуваат " +
         fmtMoney(v, "mkd") + " МКД (" + fmtMoney(eur, "eur") + " €)" +
         (share === null || share === undefined
           ? "."
-          : " — " + fmtPct(share * 100) + " % од вкупните приходи на " +
+          : " — " + Math.round(share * 100) + " % од вкупните приходи на " +
             "граѓанските организации (ЦРМ).");
     }
     if (STANDALONE) document.title =
-      "Државно финансирање на граѓанското општество · ДФГ";
+      "Државно финансирање за граѓански организации · ДФГ";
   }
 
   function renderCaption() {
