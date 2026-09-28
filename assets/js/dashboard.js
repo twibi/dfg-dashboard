@@ -182,8 +182,7 @@
   var h1 = mk(STANDALONE ? "h1" : "h2", null, "Државно финансирање на граѓанското општество");
   var sub = mk("p", "dash-sub",
     "Средства што органите на државната управа ги распределуваат за " +
-    "граѓански организации, 2018–2025. Локалното ниво ќе биде внесено " +
-    "по општини со истата структура (општина × година).");
+    "граѓански организации, 2018–2025.");
   var ins = mk("div", "dash-insight");
   head.appendChild(h1);
   head.appendChild(sub);
@@ -657,8 +656,6 @@
     var fmt = formatter(state.unit);
     var tbl = document.createElement("table");
     tbl.className = "dash-tbl";
-    tbl.appendChild(mk("caption", "dash-tbl-cap",
-      "Истите податоци како на графиконот — се менуваат со филтерите."));
 
     var thead = document.createElement("thead");
     var hr = document.createElement("tr");
