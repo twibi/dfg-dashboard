@@ -118,6 +118,13 @@ otherwise):
   or background (the content sits flush in your block) and the browser tab
   title is never changed.
 
+  Width: `.dash-page` is capped at **1178 px** — the content width of the
+  target site's WordPress container — so the block fills that container edge
+  to edge (a wider theme container simply gets a centred 1178 px column).
+  At that width the data table fits without a horizontal scrollbar in every
+  unit. The standalone file previews the same content width: a 1218 px box
+  with 20 px padding on each side.
+
 - **`dist/dfg-dashboard-standalone.html`** — a full HTML document. Upload it
   via FTP/file manager if you'd rather serve it from your own hosting.
 

@@ -57,7 +57,7 @@ body.dfg-standalone .dfg-root {
 }
 
 .dfg-root .dash-topbar-inner {
-  max-width: 1180px;
+  max-width: 1218px;        /* 1178 content + 2 x 20px padding, as on the site */
   margin: 0 auto;
   padding: 0 20px;
   display: flex;
@@ -79,13 +79,16 @@ body.dfg-standalone .dfg-root {
 .dfg-root .dash-brand span { color: var(--dfg-ink-soft); font-weight: 600; }
 
 /* ---------- Page layout ---------- */
+/* 1178px is the content width of the WordPress container this is embedded
+   in — the dashboard fills it edge to edge, with no margin of its own. */
 .dfg-root .dash-page {
-  max-width: 1180px;
+  max-width: 1178px;
   margin: 0 auto;
   padding: 0;              /* embedded: flush with the WordPress block */
 }
 
 body.dfg-standalone .dfg-root .dash-page {
+  max-width: 1218px !important;  /* 1178 content + 2 x 20px padding = the site */
   padding: 26px 20px 60px;
 }
 
@@ -504,9 +507,13 @@ body.dfg-standalone .dfg-root .dash-page {
 
 /* layout boxes a page builder could plausibly target (`section`, `.card`) */
 .dfg-root .dash-page {
-  max-width: 1180px !important;
+  max-width: 1178px !important;
   margin-left: auto !important;
   margin-right: auto !important;
+}
+
+body.dfg-standalone .dfg-root .dash-page {
+  max-width: 1218px !important;
 }
 
 .dfg-root .dash-card {
