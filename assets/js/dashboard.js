@@ -26,12 +26,68 @@
   var ACCENT = "#4a927b";
   var INK = "#4b5563";
 
-  var PALETTE = [
-    "#4e79a7", "#f28e2b", "#e15759", "#76b7b2", "#59a14f",
-    "#b07aa1", "#edc948", "#ff9da7", "#9c755f", "#7f7f7f",
-    "#a55194", "#0072b2", "#009e73", "#d55e00", "#cc79a7",
-    "#6a3d9a", "#8c6d31"
+  /* Institution colours: the GNOME HIG palette
+     (developer.gnome.org/hig/reference/palette.html) and nothing else —
+     only its shade 1 (light) and shade 5 (dark) of every hue.
+
+     The hues are handed out in the order below and brown comes last, so it
+     is used only once the other hues have run out; after brown come the
+     palette's neutral greys. Six hues x 2 = 12 colours is not enough for 17
+     institutions, so brown (x2) and the greys (x3) are the exact overflow. */
+  var SHADE_5 = [
+    "#1a5fb4",   /* Blue 5 */
+    "#26a269",   /* Green 5 */
+    "#613583",   /* Purple 5 */
+    "#c64600",   /* Orange 5 */
+    "#a51d2d",   /* Red 5 */
+    "#e5a50a",   /* Yellow 5 */
+    "#63452c",   /* Brown 5 */
+    "#77767b",   /* Dark 1 */
+    "#000000"    /* Dark 5 */
   ];
+  var SHADE_1 = [
+    "#99c1f1",   /* Blue 1 */
+    "#8ff0a4",   /* Green 1 */
+    "#dc8add",   /* Purple 1 */
+    "#ffbe6f",   /* Orange 1 */
+    "#f66151",   /* Red 1 */
+    "#f9f06b",   /* Yellow 1 */
+    "#cdab8f",   /* Brown 1 */
+    "#9a9996"    /* Light 5 */
+  ];
+
+  var colorCache = {};
+
+  /* One colour per institution, ranked by how much it paid out: the nine
+     biggest take the shade-5 (dark) slots, the rest the shade-1 (light)
+     ones — so a ministry that paid millions reads dark and one that paid
+     nothing reads pale grey. The ranking uses the full 2018–2025 series and
+     is computed once, so no filter can ever reshuffle the colours. */
+  function rankColors(lv) {
+    var totals = (lv.series && lv.series.total) || {};
+    var order = lv.institutions.map(function (inst, idx) {
+      var sum = 0;
+      (totals[inst.id] || []).forEach(function (v) {
+        if (typeof v === "number" && isFinite(v)) sum += v;
+      });
+      return { id: inst.id, sum: sum, idx: idx };
+    });
+    /* biggest first; ties keep the workbook's own order */
+    order.sort(function (a, b) { return b.sum - a.sum || a.idx - b.idx; });
+
+    var slots = SHADE_5.concat(SHADE_1);   /* 17 colours for 17 rows */
+    var map = {};
+    order.forEach(function (o, rank) {
+      map[o.id] = slots[rank] || SHADE_1[rank % SHADE_1.length];
+    });
+    return map;
+  }
+
+  function colorOf(lv, id) {
+    var key = lv.key || lv.label || "?";
+    if (!colorCache[key]) colorCache[key] = rankColors(lv);
+    return colorCache[key][id] || SHADE_1[0];
+  }
 
   var UNITS = [{ v: "mkd", t: "МКД" }, { v: "eur", t: "€" }, { v: "pct", t: "%" }];
   var CONTEXTS = [
@@ -396,10 +452,10 @@
         "За ова ниво уште нема внесени институции — податоците следуваат."));
       return;
     }
-    insts.forEach(function (inst, idx) {
+    insts.forEach(function (inst) {
       var b = mk("button", "dash-pill" + (state.sel[inst.id] ? " on" : ""));
       b.type = "button";
-      b.style.setProperty("--dfg-pill", PALETTE[idx % PALETTE.length]);
+      b.style.setProperty("--dfg-pill", colorOf(level(), inst.id));
       b.appendChild(mk("span", "dash-dot"));
       b.appendChild(document.createTextNode(chartLabel(inst)));
       b.title = inst.name;
@@ -558,7 +614,7 @@
     var rows = lv.series.total || {};
     var series = [];
 
-    lv.institutions.forEach(function (inst, idx) {
+    lv.institutions.forEach(function (inst) {
       if (!state.sel[inst.id]) return;
       var src = rows[inst.id];
       if (!src) return;
@@ -567,7 +623,7 @@
       });
       if (vals.every(function (v) { return v === null; })) return;
       series.push({ id: inst.id, name: chartLabel(inst), full: inst.name,
-                    color: PALETTE[idx % PALETTE.length], values: vals });
+                    color: colorOf(lv, inst.id), values: vals });
     });
 
     return {
