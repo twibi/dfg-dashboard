@@ -49,6 +49,7 @@ REQUIRED_CSS_CLASSES = (
     "dash-pill-line", "dash-pills", "dash-pill", "dash-pill-actions",
     "dash-mini", "dash-dot", "dash-note",
     "dash-caption", "dash-foot", "dash-chart", "dash-empty",
+    "dash-table", "dash-tbl", "dash-tbl-cap", "dash-tbl-dot",
 )
 
 FORBIDDEN_PATTERNS = (

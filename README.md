@@ -36,6 +36,23 @@ headline sentence and the `%` denominator) is that figure, which is what
 makes the dashboard suitable for the DFG. A footnote under the chart spells
 it out: *„Во овие средства не влегуваат средствата од спорт.“*
 
+### Data table
+
+Directly under the chart the same numbers are repeated as a **table** — one
+row per institution (plus the **Вкупно** row and, when it is switched on,
+the context row), one column per selected year. It is built from the very
+same `collectSeries()` result as the chart, so moving any filter updates the
+chart and the table together, and the two can never disagree:
+
+- units, year range, institution selection, the `Вкупно` toggle and the
+  context switch all apply to both;
+- values are formatted exactly like the chart tooltip (`.` thousands,
+  `,` decimals, `МКД` / `€` / `%`), missing years show `–`;
+- the first column is sticky, so it stays readable when the table scrolls
+  sideways on a narrow screen;
+- the empty states (local level, no institution selected) show the same
+  wording as the chart overlay.
+
 Missing years always render as a **gap** in the line (never as zero), and
 the caption above the chart restates the current unit and year range.
 

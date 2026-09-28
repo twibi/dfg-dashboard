@@ -304,6 +304,10 @@
   wrap.appendChild(emptyMsg);
   card.appendChild(wrap);
 
+  /* the same numbers as a table, right under the chart */
+  var tableHost = mk("div", "dash-table");
+  card.appendChild(tableHost);
+
   /* footnote: the totals shown here exclude sport */
   card.appendChild(mk("p", "dash-foot",
     "Во овие средства не влегуваат средствата од спорт."));
@@ -445,16 +449,17 @@
 
   var chart = null;
 
-  function buildConfig() {
+  /* ------------------------------------------------- shared data view */
+  /* One pass over the current filter selection. The chart AND the table
+     render exactly this, so the two can never show different numbers. */
+  function collectSeries() {
     var lv = level();
     var idxs = [];
     for (var k = state.from; k <= state.to; k++) idxs.push(k);
-    var labels = idxs.map(function (i) { return YEARS[i]; });
 
     var denom = totalSeries(lv);
     var rows = lv.series.total || {};
-    var datasets = [];
-    var leftVals = [];
+    var series = [];
 
     lv.institutions.forEach(function (inst, idx) {
       if (!state.sel[inst.id]) return;
@@ -464,50 +469,98 @@
         return xform(src[i], denom ? denom[i] : null);
       });
       if (vals.every(function (v) { return v === null; })) return;
-      leftVals = leftVals.concat(vals);
-      var ds = line(inst.short, PALETTE[idx % PALETTE.length], vals);
-      ds.dfgInst = inst.id;
+      series.push({ id: inst.id, name: inst.short,
+                    color: PALETTE[idx % PALETTE.length], values: vals });
+    });
+
+    return {
+      lv: lv,
+      idxs: idxs,
+      labels: idxs.map(function (i) { return YEARS[i]; }),
+      series: series,
+      total: (denom && state.showTotal)
+        ? idxs.map(function (i) { return xform(denom[i], denom[i]); })
+        : null
+    };
+  }
+
+  /* the dashed right-hand series, or null when it is switched off / empty */
+  function collectContext(idxs) {
+    var lv = level();
+    if (!lv.available || state.context === "none") return null;
+
+    var unit, vals;
+    if (state.context === "income") {
+      unit = state.unit === "eur" ? "eur" : "mkd";
+      vals = idxs.map(function (i) {
+        var v = lv.context.sectorIncome[i];
+        if (v === null || v === undefined) return null;
+        return unit === "eur" ? Math.round(v / RATE * 100) / 100 : v;
+      });
+    } else {
+      unit = "pct";
+      vals = idxs.map(function (i) {
+        var v = lv.context.sectorShare[i];
+        return v === null || v === undefined ? null : v * 100;
+      });
+    }
+    if (!vals.some(function (v) { return v !== null; })) return null;
+
+    return {
+      unit: unit,
+      values: vals,
+      fmt: formatter(unit),
+      name: state.context === "income"
+        ? "Приходи на ГО"
+        : "Државно финансирање во приходите на ГО",
+      color: state.context === "income" ? INK : ACCENT
+    };
+  }
+
+  /* shared empty state: the chart overlay and the table show the same words */
+  function emptyMessage(rows) {
+    if (!level().available) {
+      return "Локално ниво — податоците по општини уште не се внесени. " +
+             "Префрли се на национално ниво за да го видите прегледот.";
+    }
+    if (rows) return "";
+    return selectedInstitutions().length
+      ? "Нема податоци за избраните филтри во одбраните години."
+      : "Изберете барем една институција за да се прикажат податоците.";
+  }
+
+  function buildConfig() {
+    var data = collectSeries();
+    var idxs = data.idxs;
+    var labels = data.labels;
+
+    var datasets = [];
+    var leftVals = [];
+
+    data.series.forEach(function (s) {
+      leftVals = leftVals.concat(s.values);
+      var ds = line(s.name, s.color, s.values);
+      ds.dfgInst = s.id;
       datasets.push(ds);
     });
 
-    if (denom && state.showTotal) {
-      var tvals = idxs.map(function (i) { return xform(denom[i], denom[i]); });
-      leftVals = leftVals.concat(tvals);
-      datasets.push(line("Вкупно", MAIN, tvals,
+    if (data.total) {
+      leftVals = leftVals.concat(data.total);
+      datasets.push(line("Вкупно", MAIN, data.total,
         { borderWidth: 3.5, pointRadius: 3, pointHoverRadius: 6.5,
           dfgTotal: true }));
     }
 
-    var rightMeta = null, rightVals = [], ctxFmt = null;
-    if (lv.available && state.context !== "none") {
-      if (state.context === "income") {
-        var cu = state.unit === "eur" ? "eur" : "mkd";
-        rightVals = idxs.map(function (i) {
-          var v = lv.context.sectorIncome[i];
-          if (v === null || v === undefined) return null;
-          return cu === "eur" ? Math.round(v / RATE * 100) / 100 : v;
-        });
-        ctxFmt = formatter(cu);
-        rightMeta = axisMeta(rightVals, cu);
-      } else {
-        rightVals = idxs.map(function (i) {
-          var v = lv.context.sectorShare[i];
-          return v === null || v === undefined ? null : v * 100;
-        });
-        ctxFmt = formatter("pct");
-        rightMeta = axisMeta(rightVals, "pct");
-      }
-      if (rightVals.some(function (v) { return v !== null; })) {
-        var label = state.context === "income"
-          ? "Приходи на ГО" + (rightMeta.div === 1 ? "" : " (млн)")
-          : "Државно финансирање во приходите на ГО";
-        datasets.push(line(label, state.context === "income" ? INK : ACCENT,
-          rightVals,
-          { borderDash: [6, 4], borderWidth: 2, pointRadius: 0,
-            yAxisID: "y1" }));
-      } else {
-        rightMeta = null;
-      }
+    var ctx = collectContext(idxs);
+    var rightMeta = null, ctxFmt = null;
+    if (ctx) {
+      rightMeta = axisMeta(ctx.values, ctx.unit);
+      var ctxLabel = ctx.name;
+      if (state.context === "income" && rightMeta.div !== 1) ctxLabel += " (млн)";
+      datasets.push(line(ctxLabel, ctx.color, ctx.values,
+        { borderDash: [6, 4], borderWidth: 2, pointRadius: 0,
+          yAxisID: "y1" }));
+      ctxFmt = ctx.fmt;
     }
 
     var leftMeta = axisMeta(leftVals, state.unit);
@@ -580,18 +633,71 @@
       chart.update();
     }
 
-    var lv = level();
-    var msg = "";
-    if (!lv.available) {
-      msg = "Локално ниво — податоците по општини уште не се внесени. " +
-            "Префрли се на национално ниво за да го видите графиконот.";
-    } else if (!cfg.data.datasets.length) {
-      msg = selectedInstitutions().length
-        ? "Нема податоци за избраната мерка во одбраните години."
-        : "Изберете барем една институција за да се прикаже графиконот.";
-    }
+    var msg = emptyMessage(cfg.data.datasets.length);
     emptyMsg.textContent = msg;
     emptyMsg.style.display = msg ? "flex" : "none";
+  }
+
+  /* ------------------------------------------------------------- table */
+  /* The chart's numbers as a table, built from the same collectSeries()
+     result, so filtering updates both at once and identically. */
+  function renderTable() {
+    tableHost.innerHTML = "";
+
+    var data = collectSeries();
+    var ctx = collectContext(data.idxs);
+    var rows = data.series.length + (data.total ? 1 : 0) + (ctx ? 1 : 0);
+
+    var msg = emptyMessage(rows);
+    if (msg) {
+      tableHost.appendChild(mk("p", "dash-note", msg));
+      return;
+    }
+
+    var fmt = formatter(state.unit);
+    var tbl = document.createElement("table");
+    tbl.className = "dash-tbl";
+    tbl.appendChild(mk("caption", "dash-tbl-cap",
+      "Истите податоци како на графиконот — се менуваат со филтерите."));
+
+    var thead = document.createElement("thead");
+    var hr = document.createElement("tr");
+    hr.appendChild(mk("th", "dash-tbl-corner", "Институција"));
+    data.labels.forEach(function (y) { hr.appendChild(mk("th", null, y)); });
+    thead.appendChild(hr);
+    tbl.appendChild(thead);
+
+    var tbody = document.createElement("tbody");
+
+    function addRow(name, values, cellFmt, cls, color) {
+      var tr = document.createElement("tr");
+      if (cls) tr.className = cls;
+      var th = document.createElement("th");
+      th.scope = "row";
+      th.className = "dash-tbl-name";
+      if (color) {
+        var dot = mk("span", "dash-tbl-dot");
+        dot.style.backgroundColor = color;
+        th.appendChild(dot);
+      }
+      th.appendChild(document.createTextNode(name));
+      tr.appendChild(th);
+      values.forEach(function (v) {
+        var td = document.createElement("td");
+        td.textContent = (v === null || v === undefined) ? "–" : cellFmt(v);
+        tr.appendChild(td);
+      });
+      tbody.appendChild(tr);
+    }
+
+    data.series.forEach(function (s) {
+      addRow(s.name, s.values, fmt, null, s.color);
+    });
+    if (data.total) addRow("Вкупно", data.total, fmt, "is-total", MAIN);
+    if (ctx) addRow(ctx.name, ctx.values, ctx.fmt, "is-ctx", ctx.color);
+
+    tbl.appendChild(tbody);
+    tableHost.appendChild(tbl);
   }
 
   /* ------------------------------------------------------ heading etc. */
@@ -653,6 +759,7 @@
     renderHeading();
     renderCaption();
     updateChart();
+    renderTable();
   }
 
   resetBtn.addEventListener("click", function () {
