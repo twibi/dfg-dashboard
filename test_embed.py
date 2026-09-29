@@ -15,6 +15,14 @@ import pathlib
 root = pathlib.Path(r"C:\Users\Boris\Downloads\New folder\dfg-dashboard")
 frag = (root / "dist" / "dfg-dashboard-wordpress.html").read_text(encoding="utf-8")
 
+# The target CMS rewrites the ampersand inside inline scripts (it turned "&"
+# into a numeric entity 652 times and killed the dashboard). Mirror that pass
+# on the fragment: with a base64 payload there is nothing left to rewrite, and
+# the check below fails the test if someone ever puts an ampersand back in.
+if "&" in frag:
+    raise SystemExit("FAIL: fragment contains '&'; the CMS rewrite would break it")
+frag = frag.replace("&", "&#038;")
+
 # deliberately hostile "theme": bare-tag rules, generic classes, box-sizing reset
 page = """<!doctype html>
 <html lang="mk">

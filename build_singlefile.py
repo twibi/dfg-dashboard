@@ -12,10 +12,19 @@ Both files are fully self-contained: scoped CSS, the chart library and the
 generated data are inlined as ordinary text. The fragment carries no
 <html>/<head>/<body>, no doctype and no <script src>, so it can be pasted
 straight into a WordPress Custom HTML block.
+
+The fragment's JavaScript is shipped base64(UTF-8) and decoded in one line at
+run time, because the WordPress content filters of the target site rewrite the
+ampersand character inside <script> (observed live: 652 rewrites -> SyntaxError
+-> the dashboard never mounts). The payload contains no ampersand and no angle
+bracket, so there is nothing for such a filter to rewrite. The standalone
+build keeps the plain, readable sources — it is served from a static host that
+performs no such rewriting.
 """
 
 from __future__ import annotations
 
+import base64
 import re
 import sys
 from pathlib import Path
@@ -97,6 +106,32 @@ def script_block(scripts: list[str]) -> str:
     )
 
 
+def encoded_script_block(scripts: list[str]) -> str:
+    """The fragment's single <script>: the very same code, base64(UTF-8).
+
+    Host CMS content filters may rewrite characters inside inline scripts —
+    civicamobilitas.mk turned every other ampersand into a numeric entity,
+    which is a SyntaxError that stopped the dashboard from mounting at all.
+    The payload below is pure base64 (A-Z a-z 0-9 + / =) and the one-line
+    decoder around it holds no ampersand and no angle bracket, so such a
+    filter has nothing left to rewrite and a JS minifier only ever sees a
+    string literal. It decodes to exactly the sources the standalone build
+    ships.
+    """
+    payload = base64.b64encode("\n".join(scripts).encode("utf-8")).decode("ascii")
+    return (
+        "<script>\n"
+        "/* ==== dfg-dashboard: begin inlined scripts (generated) ==== */\n"
+        "/* The JavaScript is base64(UTF-8) so that content filters which\n"
+        "   rewrite characters inside scripts find nothing to rewrite; the\n"
+        "   browser decodes and runs it immediately. */\n"
+        f'eval(new TextDecoder().decode(Uint8Array.from(atob("{payload}"),'
+        "function(c){return c.charCodeAt(0)})));\n"
+        "/* ==== dfg-dashboard: end inlined scripts ==== */\n"
+        "</script>"
+    )
+
+
 def body_html_of(index_html: str) -> str:
     """The markup that lives between <body> and its scripts (usually empty)."""
     m = re.search(r"<body[^>]*>(.*)</body>", index_html, re.S | re.I)
@@ -134,10 +169,13 @@ def main() -> None:
 
     style = style_block(css)
     script = script_block(scripts)
+    fragment_script = encoded_script_block(scripts)
     markup = body_html_of(index_html)
 
     # ---- WordPress fragment: style + markup + one inline script ------------
-    fragment = style + "\n\n" + markup + ("\n\n" if markup else "") + script + "\n"
+    fragment = (
+        style + "\n\n" + markup + ("\n\n" if markup else "") + fragment_script + "\n"
+    )
 
     # ---- Standalone document ----------------------------------------------
     head_m = re.search(r"<head>.*</head>", index_html, re.S | re.I)
@@ -174,6 +212,23 @@ def main() -> None:
         fail("fragment: must not carry a doctype")
     if re.search(r"</?(?:html|head|body)\b", fragment, re.I):
         fail("fragment: must not contain <html>/<head>/<body> tags")
+
+    # the fragment must survive a CMS that rewrites characters inline:
+    # no ampersand anywhere in the payload, and it must decode back 1:1
+    m = re.search(r"<script>(.*?)</script>", fragment, re.S)
+    if not m:
+        fail("fragment: no inlined <script> block")
+    if "<" in m.group(1):
+        fail("fragment: the inline script must not contain '<'")
+    if "&" in m.group(1):
+        fail("fragment: the inline script must not contain '&'")
+    p = re.search(r'atob\("([A-Za-z0-9+/=]+)"\)', m.group(1))
+    if not p:
+        fail("fragment: the base64 payload was not found")
+    if base64.b64decode(p.group(1)).decode("utf-8") != "\n".join(scripts):
+        fail("fragment: the base64 payload does not round-trip")
+    if "&" in style:
+        fail("fragment: the <style> block must not contain '&'")
 
     assert_self_contained(standalone, "standalone")
     m = re.search(r"<style>(.*?)</style>", standalone, re.S)
