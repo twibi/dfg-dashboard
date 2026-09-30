@@ -1185,12 +1185,20 @@
   });
 
   /* a click on the dimmed area behind the panel is Откажи too — only outside
-     the panel, so a slip inside the dialog never throws the choice away */
+     the panel, so a slip inside the dialog never throws the choice away.
+     Only the dialog element itself can be that area: every interaction that
+     starts on a control inside keeps its own target, and the native <select>
+     popup reports positions that have nothing to do with the panel (Firefox
+     sends such a click in the same gesture that opens the list, which used to
+     close the dialog on the very click meant to open the options). A click
+     without a real position is never a miss either. */
   pngDlg.addEventListener("click", function (ev) {
+    if (ev.target !== pngDlg) return;
+    if (!ev.clientX && !ev.clientY) return;
     var r = pngDlg.getBoundingClientRect();
-    var inside = ev.clientX >= r.left && ev.clientX <= r.right &&
-                 ev.clientY >= r.top && ev.clientY <= r.bottom;
-    if (!inside) closeDlg();
+    var outside = ev.clientX < r.left || ev.clientX > r.right ||
+                  ev.clientY < r.top || ev.clientY > r.bottom;
+    if (outside) closeDlg();
   });
 
   /* Chart.js defers its paint to requestAnimationFrame, which the browser
